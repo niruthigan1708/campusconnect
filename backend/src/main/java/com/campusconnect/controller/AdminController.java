@@ -3,6 +3,7 @@ package com.campusconnect.controller;
 import com.campusconnect.dto.admin.AdminDashboardResponse;
 import com.campusconnect.dto.admin.UserSummaryResponse;
 import com.campusconnect.dto.event.EventResponse;
+import com.campusconnect.entity.EventStatus;
 import com.campusconnect.entity.Role;
 import com.campusconnect.service.AdminService;
 import com.campusconnect.service.EventService;
@@ -37,5 +38,10 @@ public class AdminController {
     @GetMapping("/events/pending")
     public List<EventResponse> listPendingEvents() {
         return eventService.listPendingEvents();
+    }
+
+    @GetMapping("/events")
+    public List<EventResponse> listAllEvents(@RequestParam(required = false) EventStatus status) {
+        return eventService.listAllEvents(status);
     }
 }

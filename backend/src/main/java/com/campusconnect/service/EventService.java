@@ -50,6 +50,11 @@ public class EventService {
         return eventRepository.findByStatus(EventStatus.PENDING).stream().map(eventMapper::toResponse).toList();
     }
 
+    public List<EventResponse> listAllEvents(EventStatus status) {
+        List<Event> events = status != null ? eventRepository.findByStatus(status) : eventRepository.findAll();
+        return events.stream().map(eventMapper::toResponse).toList();
+    }
+
     public EventResponse getEvent(Long eventId, CustomUserDetails principal) {
         Event event = findEventOrThrow(eventId);
         assertViewable(event, principal);
