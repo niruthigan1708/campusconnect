@@ -84,13 +84,13 @@ export default function ManageEventsPage() {
         />
       ) : (
         <div className="rounded-lg border">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>Event</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead className="sm:w-1/2">Event</TableHead>
+                <TableHead className="hidden sm:table-cell">Date</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Registrations</TableHead>
+                <TableHead className="hidden sm:table-cell">Registrations</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -99,21 +99,27 @@ export default function ManageEventsPage() {
                 const canDelete = event.status === "PENDING" || event.status === "REJECTED";
                 return (
                   <TableRow key={event.id}>
-                    <TableCell className="font-medium">
-                      <Link href={`/events/${event.id}`} className="hover:underline">
+                    <TableCell className="max-w-28 font-medium sm:max-w-none">
+                      <Link href={`/events/${event.id}`} className="block truncate hover:underline">
                         {event.title}
                       </Link>
                       {event.status === "REJECTED" && event.rejectionReason && (
-                        <p className="mt-0.5 text-xs text-muted-foreground">
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
                           Reason: {event.rejectionReason}
                         </p>
                       )}
+                      <p className="truncate text-xs text-muted-foreground sm:hidden">
+                        {formatDate(event.eventDate)} &middot; {event.capacity - event.availableSpots} /{" "}
+                        {event.capacity} registered
+                      </p>
                     </TableCell>
-                    <TableCell>{formatDate(event.eventDate)}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{formatDate(event.eventDate)}</TableCell>
                     <TableCell>
                       <StatusBadge status={event.status} />
                     </TableCell>
-                    <TableCell>{event.capacity - event.availableSpots} / {event.capacity}</TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {event.capacity - event.availableSpots} / {event.capacity}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button asChild variant="ghost" size="icon" title="View registrations">

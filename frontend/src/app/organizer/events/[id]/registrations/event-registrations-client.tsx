@@ -79,7 +79,7 @@ export function EventRegistrationsClient({ id }: { id: string }) {
               <TableRow>
                 <TableHead>Student</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Registered</TableHead>
+                <TableHead className="hidden sm:table-cell">Registered</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -87,7 +87,9 @@ export function EventRegistrationsClient({ id }: { id: string }) {
                 <TableRow key={r.id}>
                   <TableCell className="font-medium">{r.studentName}</TableCell>
                   <TableCell>{r.studentEmail}</TableCell>
-                  <TableCell>{formatDate(r.registeredAt.slice(0, 10))}</TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    {formatDate(r.registeredAt.slice(0, 10))}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

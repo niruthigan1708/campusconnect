@@ -116,12 +116,12 @@ export default function AdminEventsPage() {
         <EmptyState icon={CalendarCheck} title="No events found" description="Nothing matches this filter." />
       ) : (
         <div className="rounded-lg border">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>Event</TableHead>
-                <TableHead>Organizer</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead className="sm:w-1/2">Event</TableHead>
+                <TableHead className="hidden sm:table-cell">Organizer</TableHead>
+                <TableHead className="hidden sm:table-cell">Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -129,16 +129,19 @@ export default function AdminEventsPage() {
             <TableBody>
               {events.map((event) => (
                 <TableRow key={event.id}>
-                  <TableCell className="font-medium">
-                    <Link href={`/events/${event.id}`} className="hover:underline">
+                  <TableCell className="max-w-28 font-medium sm:max-w-none">
+                    <Link href={`/events/${event.id}`} className="block truncate hover:underline">
                       {event.title}
                     </Link>
+                    <p className="truncate text-xs text-muted-foreground sm:hidden">
+                      {event.organizerName} &middot; {formatDate(event.eventDate)}
+                    </p>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     {event.organizerName}
                     <p className="text-xs text-muted-foreground">{event.clubName}</p>
                   </TableCell>
-                  <TableCell>{formatDate(event.eventDate)}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{formatDate(event.eventDate)}</TableCell>
                   <TableCell>
                     <StatusBadge status={event.status} />
                   </TableCell>

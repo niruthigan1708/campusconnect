@@ -79,12 +79,12 @@ export default function MyEventsPage() {
         />
       ) : (
         <div className="rounded-lg border">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>Event</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Location</TableHead>
+                <TableHead className="sm:w-1/2">Event</TableHead>
+                <TableHead className="hidden sm:table-cell">Date</TableHead>
+                <TableHead className="hidden sm:table-cell">Location</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -92,15 +92,18 @@ export default function MyEventsPage() {
             <TableBody>
               {events.map((event) => (
                 <TableRow key={event.id}>
-                  <TableCell className="font-medium">
-                    <Link href={`/events/${event.id}`} className="hover:underline">
+                  <TableCell className="max-w-40 font-medium sm:max-w-none">
+                    <Link href={`/events/${event.id}`} className="block truncate hover:underline">
                       {event.title}
                     </Link>
+                    <p className="truncate text-xs text-muted-foreground sm:hidden">
+                      {formatDate(event.eventDate)} &middot; {event.location}
+                    </p>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     {formatDate(event.eventDate)} &middot; {formatTime(event.startTime)}
                   </TableCell>
-                  <TableCell>{event.location}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{event.location}</TableCell>
                   <TableCell>
                     <StatusBadge status={event.status} />
                   </TableCell>

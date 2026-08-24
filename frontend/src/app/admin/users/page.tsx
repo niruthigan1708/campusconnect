@@ -71,24 +71,27 @@ export default function AdminUsersPage() {
         <EmptyState icon={Users} title="No users found" />
       ) : (
         <div className="rounded-lg border">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead className="sm:w-1/2">Name</TableHead>
+                <TableHead className="hidden sm:table-cell">Email</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>Joined</TableHead>
+                <TableHead className="hidden sm:table-cell">Joined</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((u) => (
                 <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.name}</TableCell>
-                  <TableCell>{u.email}</TableCell>
+                  <TableCell className="max-w-40 font-medium sm:max-w-none">
+                    {u.name}
+                    <p className="truncate text-xs text-muted-foreground sm:hidden">{u.email}</p>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">{u.email}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{humanize(u.role)}</Badge>
                   </TableCell>
-                  <TableCell>{formatDate(u.createdAt.slice(0, 10))}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{formatDate(u.createdAt.slice(0, 10))}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
