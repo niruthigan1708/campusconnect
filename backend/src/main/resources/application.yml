@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: campusconnect-backend
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:campusconnect}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+
+  jpa:
+    hibernate:
+      # update = fine for a solo MVP; a real production setup would use Flyway migrations instead.
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-this-to-a-long-random-secret-in-your-env-file-at-least-256-bits}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}

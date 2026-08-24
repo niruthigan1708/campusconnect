@@ -1,0 +1,17 @@
+# Environment files (never commit real secrets)
+.env
+.env.local
+*.env
+!.env.example
+
+# Frontend (Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.turbo/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
