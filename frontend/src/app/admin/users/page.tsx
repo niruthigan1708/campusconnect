@@ -7,6 +7,7 @@ import { Role, UserSummaryResponse } from "@/lib/types";
 import { formatDate } from "@/lib/format";
 import { humanize } from "@/lib/format";
 import { EmptyState } from "@/components/empty-state";
+import { PaginationControls } from "@/components/pagination-controls";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -35,14 +36,26 @@ const ROLE_FILTERS: { value: Role | "ALL"; label: string }[] = [
 
 export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState<Role | "ALL">("ALL");
+  const [page, setPage] = useState(0);
   const [users, setUsers] = useState<UserSummaryResponse[] | null>(null);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
   useEffect(() => {
     adminApi
-      .listUsers(roleFilter === "ALL" ? undefined : roleFilter)
-      .then(setUsers)
+      .listUsers(roleFilter === "ALL" ? undefined : roleFilter, page)
+      .then((data) => {
+        setUsers(data.content);
+        setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
+      })
       .catch(() => toast.error("Couldn't load users."));
-  }, [roleFilter]);
+  }, [roleFilter, page]);
+
+  function handleRoleFilterChange(value: Role | "ALL") {
+    setRoleFilter(value);
+    setPage(0);
+  }
 
   return (
     <div className="space-y-6">
@@ -51,7 +64,7 @@ export default function AdminUsersPage() {
           <h1 className="text-2xl font-bold tracking-tight">Users</h1>
           <p className="text-muted-foreground">Everyone registered on the platform</p>
         </div>
-        <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as Role | "ALL")}>
+        <Select value={roleFilter} onValueChange={(v) => handleRoleFilterChange(v as Role | "ALL")}>
           <SelectTrigger className="w-44">
             <SelectValue />
           </SelectTrigger>
@@ -96,6 +109,12 @@ export default function AdminUsersPage() {
               ))}
             </TableBody>
           </Table>
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            onPageChange={setPage}
+          />
         </div>
       )}
     </div>

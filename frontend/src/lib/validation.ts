@@ -43,3 +43,10 @@ export const eventSchema = z
     path: ["eventDate"],
   });
 export type EventFormValues = z.infer<typeof eventSchema>;
+
+export const clubSchema = z.object({
+  name: z.string().min(2, "Club name must be at least 2 characters").max(100, "Club name must not exceed 100 characters"),
+  description: z.string().max(2000, "Description must not exceed 2000 characters").optional(),
+  contactEmail: z.string().email("Enter a valid email").optional().or(z.literal("")),
+});
+export type ClubFormValues = z.infer<typeof clubSchema>;

@@ -4,6 +4,7 @@ import {
   AuthResponse,
   EventCategory,
   EventResponse,
+  PageResponse,
   RegistrationResponse,
   Role,
   UserSummaryResponse,
@@ -157,12 +158,18 @@ export const clubsApi = {
 export const adminApi = {
   dashboard: () => apiFetch<AdminDashboardResponse>("/api/admin/dashboard"),
 
-  listUsers: (role?: Role) =>
-    apiFetch<UserSummaryResponse[]>(`/api/admin/users${role ? `?role=${role}` : ""}`),
+  listUsers: (role?: Role, page = 0, size = 20) => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (role) params.set("role", role);
+    return apiFetch<PageResponse<UserSummaryResponse>>(`/api/admin/users?${params}`);
+  },
 
   listPendingEvents: () => apiFetch<EventResponse[]>("/api/admin/events/pending"),
 
-  listAllEvents: (status?: EventResponse["status"]) =>
-    apiFetch<EventResponse[]>(`/api/admin/events${status ? `?status=${status}` : ""}`),
+  listAllEvents: (status?: EventResponse["status"], page = 0, size = 20) => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (status) params.set("status", status);
+    return apiFetch<PageResponse<EventResponse>>(`/api/admin/events?${params}`);
+  },
 };
 

@@ -8,6 +8,7 @@ import { EventResponse, EventStatus } from "@/lib/types";
 import { formatDate } from "@/lib/format";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
+import { PaginationControls } from "@/components/pagination-controls";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,18 +49,31 @@ const STATUS_FILTERS: { value: EventStatus | "ALL"; label: string }[] = [
 
 export default function AdminEventsPage() {
   const [statusFilter, setStatusFilter] = useState<EventStatus | "ALL">("PENDING");
+  const [page, setPage] = useState(0);
   const [events, setEvents] = useState<EventResponse[] | null>(null);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectDialogId, setRejectDialogId] = useState<number | null>(null);
 
   function load() {
-    const fetcher =
-      statusFilter === "ALL" ? adminApi.listAllEvents() : adminApi.listAllEvents(statusFilter);
-    fetcher.then(setEvents).catch(() => toast.error("Couldn't load events."));
+    adminApi
+      .listAllEvents(statusFilter === "ALL" ? undefined : statusFilter, page)
+      .then((data) => {
+        setEvents(data.content);
+        setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
+      })
+      .catch(() => toast.error("Couldn't load events."));
   }
 
-  useEffect(load, [statusFilter]);
+  useEffect(load, [statusFilter, page]);
+
+  function handleStatusFilterChange(value: EventStatus | "ALL") {
+    setStatusFilter(value);
+    setPage(0);
+  }
 
   async function handleApprove(id: number) {
     setProcessingId(id);
@@ -96,7 +110,7 @@ export default function AdminEventsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Events</h1>
           <p className="text-muted-foreground">Review pending events and manage the platform&apos;s event list</p>
         </div>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as EventStatus | "ALL")}>
+        <Select value={statusFilter} onValueChange={(v) => handleStatusFilterChange(v as EventStatus | "ALL")}>
           <SelectTrigger className="w-48">
             <SelectValue />
           </SelectTrigger>
@@ -203,6 +217,12 @@ export default function AdminEventsPage() {
               ))}
             </TableBody>
           </Table>
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            onPageChange={setPage}
+          />
         </div>
       )}
     </div>

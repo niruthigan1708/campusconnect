@@ -1,5 +1,6 @@
 package com.campusconnect.service;
 
+import com.campusconnect.dto.common.PageResponse;
 import com.campusconnect.dto.event.EventRequest;
 import com.campusconnect.dto.event.EventResponse;
 import com.campusconnect.entity.Club;
@@ -15,6 +16,8 @@ import com.campusconnect.repository.RegistrationRepository;
 import com.campusconnect.security.CustomUserDetails;
 import com.campusconnect.specification.EventSpecifications;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -52,9 +55,11 @@ public class EventService {
         return eventRepository.findByStatus(EventStatus.PENDING).stream().map(eventMapper::toResponse).toList();
     }
 
-    public List<EventResponse> listAllEvents(EventStatus status) {
-        List<Event> events = status != null ? eventRepository.findByStatus(status) : eventRepository.findAll();
-        return events.stream().map(eventMapper::toResponse).toList();
+    public PageResponse<EventResponse> listAllEvents(EventStatus status, Pageable pageable) {
+        Page<Event> events = status != null
+                ? eventRepository.findByStatus(status, pageable)
+                : eventRepository.findAll(pageable);
+        return PageResponse.from(events, eventMapper::toResponse);
     }
 
     public EventResponse getEvent(Long eventId, CustomUserDetails principal) {

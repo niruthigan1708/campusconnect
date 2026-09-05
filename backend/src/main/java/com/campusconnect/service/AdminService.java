@@ -2,6 +2,7 @@ package com.campusconnect.service;
 
 import com.campusconnect.dto.admin.AdminDashboardResponse;
 import com.campusconnect.dto.admin.UserSummaryResponse;
+import com.campusconnect.dto.common.PageResponse;
 import com.campusconnect.entity.EventStatus;
 import com.campusconnect.entity.Role;
 import com.campusconnect.entity.User;
@@ -9,10 +10,10 @@ import com.campusconnect.repository.EventRepository;
 import com.campusconnect.repository.RegistrationRepository;
 import com.campusconnect.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -35,19 +36,17 @@ public class AdminService {
                 .build();
     }
 
-    public List<UserSummaryResponse> listUsers(Role role) {
-        List<User> users = role != null
-                ? userRepository.findByRole(role)
-                : userRepository.findAll();
+    public PageResponse<UserSummaryResponse> listUsers(Role role, Pageable pageable) {
+        Page<User> users = role != null
+                ? userRepository.findByRole(role, pageable)
+                : userRepository.findAll(pageable);
 
-        return users.stream()
-                .map(user -> UserSummaryResponse.builder()
-                        .id(user.getId())
-                        .name(user.getName())
-                        .email(user.getEmail())
-                        .role(user.getRole())
-                        .createdAt(user.getCreatedAt())
-                        .build())
-                .toList();
+        return PageResponse.from(users, user -> UserSummaryResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .createdAt(user.getCreatedAt())
+                .build());
     }
 }
