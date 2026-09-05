@@ -74,10 +74,10 @@ export default function AdminUsersPage() {
           <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead className="sm:w-1/2">Name</TableHead>
-                <TableHead className="hidden sm:table-cell">Email</TableHead>
+                <TableHead className="sm:w-[30%]">Name</TableHead>
+                <TableHead className="hidden sm:table-cell sm:w-[32%]">Email</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead className="hidden sm:table-cell">Joined</TableHead>
+                <TableHead className="hidden sm:table-cell sm:w-[18%]">Joined</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

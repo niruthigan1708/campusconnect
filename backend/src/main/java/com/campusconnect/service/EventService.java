@@ -15,6 +15,7 @@ import com.campusconnect.repository.RegistrationRepository;
 import com.campusconnect.security.CustomUserDetails;
 import com.campusconnect.specification.EventSpecifications;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +40,8 @@ public class EventService {
         if (search != null && !search.isBlank()) {
             spec = spec.and(EventSpecifications.matchesKeyword(search));
         }
-        return eventRepository.findAll(spec).stream().map(eventMapper::toResponse).toList();
+        Sort sort = Sort.by(Sort.Direction.ASC, "eventDate", "startTime");
+        return eventRepository.findAll(spec, sort).stream().map(eventMapper::toResponse).toList();
     }
 
     public List<EventResponse> listMyEvents(Long organizerId) {
@@ -151,6 +153,19 @@ public class EventService {
         }
         event.setStatus(EventStatus.REJECTED);
         event.setRejectionReason(reason);
+        return eventMapper.toResponse(event);
+    }
+
+    @Transactional
+    public EventResponse cancelEvent(Long eventId, Long requesterId, boolean isAdmin) {
+        Event event = findEventOrThrow(eventId);
+        if (!isAdmin) {
+            assertOwnedBy(event, requesterId);
+        }
+        if (event.getStatus() == EventStatus.CANCELLED || event.getStatus() == EventStatus.COMPLETED) {
+            throw new BadRequestException("Event is already " + event.getStatus().name().toLowerCase());
+        }
+        event.setStatus(EventStatus.CANCELLED);
         return eventMapper.toResponse(event);
     }
 

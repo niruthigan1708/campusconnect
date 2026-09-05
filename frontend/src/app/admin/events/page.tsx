@@ -119,9 +119,9 @@ export default function AdminEventsPage() {
           <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead className="sm:w-1/2">Event</TableHead>
-                <TableHead className="hidden sm:table-cell">Organizer</TableHead>
-                <TableHead className="hidden sm:table-cell">Date</TableHead>
+                <TableHead className="sm:w-[32%]">Event</TableHead>
+                <TableHead className="hidden sm:table-cell sm:w-[20%]">Organizer</TableHead>
+                <TableHead className="hidden sm:table-cell sm:w-[18%]">Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>

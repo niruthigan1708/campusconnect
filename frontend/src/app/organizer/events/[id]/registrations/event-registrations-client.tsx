@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ApiError, eventsApi } from "@/lib/api";
 import { EventResponse, RegistrationResponse } from "@/lib/types";
 import { formatDate, formatTime } from "@/lib/format";
+import { exportRegistrationsToCsv } from "@/lib/csv";
 import { EmptyState } from "@/components/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -17,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, SearchX, Users } from "lucide-react";
+import { ArrowLeft, Download, SearchX, Users } from "lucide-react";
 
 export function EventRegistrationsClient({ id }: { id: string }) {
   const [event, setEvent] = useState<EventResponse | null>(null);
@@ -48,23 +49,37 @@ export function EventRegistrationsClient({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
-          <Link href="/organizer/events">
-            <ArrowLeft className="h-4 w-4" />
-            Back to My Events
-          </Link>
-        </Button>
-        {event ? (
-          <>
-            <h1 className="text-2xl font-bold tracking-tight">{event.title}</h1>
-            <p className="text-muted-foreground">
-              {formatDate(event.eventDate)} &middot; {formatTime(event.startTime)} &middot;{" "}
-              {event.capacity - event.availableSpots} / {event.capacity} registered
-            </p>
-          </>
-        ) : (
-          <Skeleton className="h-8 w-64" />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
+            <Link href="/organizer/events">
+              <ArrowLeft className="h-4 w-4" />
+              Back to My Events
+            </Link>
+          </Button>
+          {event ? (
+            <>
+              <h1 className="text-2xl font-bold tracking-tight">{event.title}</h1>
+              <p className="text-muted-foreground">
+                {formatDate(event.eventDate)} &middot; {formatTime(event.startTime)} &middot;{" "}
+                {event.capacity - event.availableSpots} / {event.capacity} registered
+              </p>
+            </>
+          ) : (
+            <Skeleton className="h-8 w-64" />
+          )}
+        </div>
+
+        {registrations && registrations.length > 0 && event && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => exportRegistrationsToCsv(registrations, event.title)}
+          >
+            <Download className="h-4 w-4" />
+            Export Attendees (CSV)
+          </Button>
         )}
       </div>
 

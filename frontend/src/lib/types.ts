@@ -86,6 +86,24 @@ export interface UserSummaryResponse {
   createdAt: string;
 }
 
+export interface ClubResponse {
+  id: number;
+  name: string;
+  description: string;
+  contactEmail: string | null;
+  organizerId: number;
+  organizerName: string;
+  organizerEmail: string;
+  activeEventsCount: number;
+  createdAt: string;
+}
+
+export interface ClubRequestPayload {
+  name: string;
+  description?: string;
+  contactEmail?: string;
+}
+
 export interface ApiErrorResponse {
   timestamp: string;
   status: number;
@@ -94,3 +112,4 @@ export interface ApiErrorResponse {
   path: string;
   fieldErrors: Record<string, string> | null;
 }
+

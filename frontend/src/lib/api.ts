@@ -118,6 +118,9 @@ export const eventsApi = {
   update: (id: number | string, payload: EventRequestPayload) =>
     apiFetch<EventResponse>(`/api/events/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
 
+  cancel: (id: number | string) =>
+    apiFetch<EventResponse>(`/api/events/${id}/cancel`, { method: "POST" }),
+
   remove: (id: number | string) => apiFetch<void>(`/api/events/${id}`, { method: "DELETE" }),
 
   approve: (id: number | string) => apiFetch<EventResponse>(`/api/events/${id}/approve`, { method: "POST" }),
@@ -142,6 +145,15 @@ export const registrationsApi = {
   myEvents: () => apiFetch<EventResponse[]>("/api/registrations/my"),
 };
 
+export const clubsApi = {
+  list: () => apiFetch<import("./types").ClubResponse[]>("/api/clubs"),
+  getById: (id: number | string) => apiFetch<import("./types").ClubResponse>(`/api/clubs/${id}`),
+  getEvents: (id: number | string) => apiFetch<EventResponse[]>(`/api/clubs/${id}/events`),
+  myClub: () => apiFetch<import("./types").ClubResponse>("/api/clubs/my"),
+  updateMyClub: (payload: import("./types").ClubRequestPayload) =>
+    apiFetch<import("./types").ClubResponse>("/api/clubs/my", { method: "PUT", body: JSON.stringify(payload) }),
+};
+
 export const adminApi = {
   dashboard: () => apiFetch<AdminDashboardResponse>("/api/admin/dashboard"),
 
@@ -153,3 +165,4 @@ export const adminApi = {
   listAllEvents: (status?: EventResponse["status"]) =>
     apiFetch<EventResponse[]>(`/api/admin/events${status ? `?status=${status}` : ""}`),
 };
+

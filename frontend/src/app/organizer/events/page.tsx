@@ -87,10 +87,10 @@ export default function ManageEventsPage() {
           <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead className="sm:w-1/2">Event</TableHead>
-                <TableHead className="hidden sm:table-cell">Date</TableHead>
+                <TableHead className="sm:w-[32%]">Event</TableHead>
+                <TableHead className="hidden sm:table-cell sm:w-[18%]">Date</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="hidden sm:table-cell">Registrations</TableHead>
+                <TableHead className="hidden sm:table-cell sm:w-[16%]">Registrations</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>

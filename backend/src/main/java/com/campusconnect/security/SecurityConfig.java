@@ -54,9 +54,18 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/h2-console/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/clubs/my").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/clubs", "/api/clubs/*", "/api/clubs/*/events").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/events/my").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/events", "/api/events/*").permitAll()
                         .anyRequest().authenticated()
