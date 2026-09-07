@@ -9,6 +9,7 @@ import { EventFormValues } from "@/lib/validation";
 import { EventCategory, EventResponse } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
+import { ImageUpload } from "@/components/image-upload";
 import { SearchX } from "lucide-react";
 
 export function EditEventClient({ id }: { id: string }) {
@@ -28,6 +29,11 @@ export function EditEventClient({ id }: { id: string }) {
         }
       });
   }, [id]);
+
+  async function handleBannerUpload(file: File) {
+    const updated = await eventsApi.uploadBanner(id, file);
+    setEvent(updated);
+  }
 
   async function handleSubmit(values: EventFormValues) {
     try {
@@ -56,6 +62,15 @@ export function EditEventClient({ id }: { id: string }) {
         <p className="text-muted-foreground">
           Saving changes sends this event back to pending for re-approval.
         </p>
+      </div>
+      <div>
+        <p className="mb-2 text-sm font-medium">Event Banner</p>
+        <ImageUpload
+          currentUrl={event.bannerUrl}
+          onUpload={handleBannerUpload}
+          label="Upload banner"
+          shape="banner"
+        />
       </div>
       <EventForm
         defaultValues={{

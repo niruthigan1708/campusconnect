@@ -1,5 +1,6 @@
 package com.campusconnect.controller;
 
+import com.campusconnect.dto.common.PageResponse;
 import com.campusconnect.dto.event.EventRejectRequest;
 import com.campusconnect.dto.event.EventRequest;
 import com.campusconnect.dto.event.EventResponse;
@@ -13,11 +14,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -32,11 +36,12 @@ public class EventController {
 
     @GetMapping
     @Operation(summary = "List all approved upcoming events with optional category and search filter")
-    public List<EventResponse> listApprovedEvents(
+    public PageResponse<EventResponse> listApprovedEvents(
             @RequestParam(required = false) EventCategory category,
-            @RequestParam(required = false) String search
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 12) Pageable pageable
     ) {
-        return eventService.listApprovedEvents(category, search);
+        return eventService.listApprovedEvents(category, search, pageable);
     }
 
     @GetMapping("/my")
@@ -72,6 +77,17 @@ public class EventController {
             @AuthenticationPrincipal CustomUserDetails principal
     ) {
         return eventService.updateEvent(id, principal.getId(), request);
+    }
+
+    @PostMapping("/{id}/banner")
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @Operation(summary = "Upload a banner image for an event you organize")
+    public EventResponse uploadEventBanner(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        return eventService.updateEventBanner(id, principal.getId(), file);
     }
 
     @PostMapping("/{id}/cancel")

@@ -31,6 +31,7 @@ class EventMapper {
                 .category(event.getCategory())
                 .status(event.getStatus())
                 .rejectionReason(event.getRejectionReason())
+                .bannerUrl(event.getBannerUrl())
                 .organizerId(event.getOrganizer().getId())
                 .organizerName(event.getOrganizer().getName())
                 .clubId(event.getClub().getId())

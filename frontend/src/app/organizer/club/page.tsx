@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/form";
 import { Building2, Calendar, Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/format";
+import { ImageUpload } from "@/components/image-upload";
+import { toAssetUrl } from "@/lib/api";
 
 export default function ClubProfilePage() {
   const [club, setClub] = useState<ClubResponse | null>(null);
@@ -55,6 +57,11 @@ export default function ClubProfilePage() {
       .finally(() => setIsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function handleLogoUpload(file: File) {
+    const updated = await clubsApi.uploadMyClubLogo(file);
+    setClub(updated);
+  }
 
   async function onSubmit(values: ClubFormValues) {
     try {
@@ -106,9 +113,18 @@ export default function ClubProfilePage() {
 
       <Card>
         <CardHeader className="flex-row items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Building2 className="h-6 w-6" />
-          </div>
+          {club?.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={toAssetUrl(club.logoUrl) ?? undefined}
+              alt={club.name}
+              className="h-12 w-12 rounded-xl object-cover"
+            />
+          ) : (
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Building2 className="h-6 w-6" />
+            </div>
+          )}
           <div>
             <CardTitle>{club?.name}</CardTitle>
             <CardDescription className="flex items-center gap-3">
@@ -127,6 +143,11 @@ export default function ClubProfilePage() {
           </div>
         </CardHeader>
         <CardContent className="border-t pt-5">
+          <div className="mb-5">
+            <p className="mb-2 text-sm font-medium">Club Logo</p>
+            <ImageUpload currentUrl={club?.logoUrl} onUpload={handleLogoUpload} label="Upload logo" shape="square" />
+          </div>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <FormField

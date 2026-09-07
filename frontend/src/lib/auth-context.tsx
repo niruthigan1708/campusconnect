@@ -35,6 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setUser(getStoredAuth());
     setIsLoading(false);
+
+    // Fired by apiFetch when a request 401s and the refresh token can't renew
+    // the session (expired, revoked, or the account was deactivated).
+    function handleSessionExpired() {
+      setUser(null);
+    }
+    window.addEventListener("campusconnect:session-expired", handleSessionExpired);
+    return () => window.removeEventListener("campusconnect:session-expired", handleSessionExpired);
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -52,8 +60,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    const current = getStoredAuth();
     setStoredAuth(null);
     setUser(null);
+    if (current?.refreshToken) {
+      // Best-effort: revoke server-side so the refresh token can't be replayed.
+      // The user is already logged out locally regardless of whether this succeeds.
+      authApi.logout(current.refreshToken).catch(() => {});
+    }
   }, []);
 
   return (

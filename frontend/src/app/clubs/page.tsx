@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { clubsApi } from "@/lib/api";
+import { clubsApi, toAssetUrl } from "@/lib/api";
 import { ClubResponse } from "@/lib/types";
 import {
   Building2,
@@ -111,9 +111,18 @@ export default function ClubsPage() {
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Building2 className="h-5 w-5" />
-                    </div>
+                    {club.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={toAssetUrl(club.logoUrl) ?? undefined}
+                        alt={club.name}
+                        className="h-10 w-10 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Building2 className="h-5 w-5" />
+                      </div>
+                    )}
                     {club.activeEventsCount > 0 && (
                       <Badge variant="secondary" className="gap-1 text-xs font-semibold text-primary">
                         <Calendar className="h-3 w-3" />

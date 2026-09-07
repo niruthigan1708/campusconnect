@@ -63,7 +63,7 @@ class RegistrationServiceTest {
 
     @Test
     void register_createsRegistrationWhenSpotsAvailable() {
-        when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
         when(registrationRepository.existsByStudentIdAndEventId(5L, 100L)).thenReturn(false);
         when(registrationRepository.countByEventId(100L)).thenReturn(0L);
         when(userRepository.findById(5L)).thenReturn(Optional.of(student));
@@ -88,7 +88,7 @@ class RegistrationServiceTest {
     @Test
     void register_throwsWhenEventNotApproved() {
         approvedEvent.setStatus(EventStatus.PENDING);
-        when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
 
         assertThrows(BadRequestException.class, () -> registrationService.register(5L, 100L));
         verify(registrationRepository, never()).save(any());
@@ -96,7 +96,7 @@ class RegistrationServiceTest {
 
     @Test
     void register_throwsWhenAlreadyRegistered() {
-        when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
         when(registrationRepository.existsByStudentIdAndEventId(5L, 100L)).thenReturn(true);
 
         assertThrows(DuplicateResourceException.class, () -> registrationService.register(5L, 100L));
@@ -105,7 +105,7 @@ class RegistrationServiceTest {
 
     @Test
     void register_throwsWhenEventIsFull() {
-        when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
         when(registrationRepository.existsByStudentIdAndEventId(5L, 100L)).thenReturn(false);
         when(registrationRepository.countByEventId(100L)).thenReturn(2L); // capacity is 2
 
@@ -115,7 +115,7 @@ class RegistrationServiceTest {
 
     @Test
     void register_throwsWhenEventNotFound() {
-        when(eventRepository.findById(999L)).thenReturn(Optional.empty());
+        when(eventRepository.findByIdForUpdate(999L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> registrationService.register(5L, 999L));
     }

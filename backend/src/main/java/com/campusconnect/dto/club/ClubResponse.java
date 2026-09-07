@@ -18,6 +18,7 @@ public class ClubResponse {
     private String name;
     private String description;
     private String contactEmail;
+    private String logoUrl;
     private Long organizerId;
     private String organizerName;
     private String organizerEmail;

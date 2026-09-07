@@ -12,6 +12,7 @@ import com.campusconnect.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class ClubService {
     private final ClubRepository clubRepository;
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
+    private final FileStorageService fileStorageService;
 
     public List<ClubResponse> listAllClubs() {
         return clubRepository.findAll().stream()
@@ -64,6 +66,15 @@ public class ClubService {
         return toClubResponse(club);
     }
 
+    @Transactional
+    public ClubResponse updateMyClubLogo(Long organizerId, MultipartFile file) {
+        Club club = clubRepository.findByOrganizerId(organizerId)
+                .orElseThrow(() -> new ResourceNotFoundException("No club registered for organizer: " + organizerId));
+
+        club.setLogoUrl(fileStorageService.storeImage(file, "clubs"));
+        return toClubResponse(club);
+    }
+
     private ClubResponse toClubResponse(Club club) {
         long activeCount = eventRepository.countByClubIdAndStatus(club.getId(), EventStatus.APPROVED);
         return ClubResponse.builder()
@@ -71,6 +82,7 @@ public class ClubService {
                 .name(club.getName())
                 .description(club.getDescription())
                 .contactEmail(club.getContactEmail())
+                .logoUrl(club.getLogoUrl())
                 .organizerId(club.getOrganizer() != null ? club.getOrganizer().getId() : null)
                 .organizerName(club.getOrganizer() != null ? club.getOrganizer().getName() : null)
                 .organizerEmail(club.getOrganizer() != null ? club.getOrganizer().getEmail() : null)

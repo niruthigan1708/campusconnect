@@ -14,7 +14,15 @@ app:
   jwt:
     secret: test-secret-key-that-is-at-least-256-bits-long-for-testing-purpose-only
     expiration-ms: 86400000
+    refresh-expiration-ms: 604800000
   admin:
     name: Test Admin
     email: testadmin@campusconnect.edu
     password: Password123!
+  cors:
+    allowed-origins: http://localhost:3000
+  frontend-url: http://localhost:3000
+  password-reset:
+    expiration-ms: 1800000
+  uploads:
+    dir: target/test-uploads

@@ -26,6 +26,7 @@ public class EventResponse {
     private EventCategory category;
     private EventStatus status;
     private String rejectionReason;
+    private String bannerUrl;
 
     private Long organizerId;
     private String organizerName;

@@ -17,12 +17,14 @@ public class CustomUserDetails implements UserDetails {
     private final String email;
     private final String password;
     private final Role role;
+    private final boolean active;
 
     public CustomUserDetails(User user) {
         this.id = user.getId();
         this.email = user.getEmail();
         this.password = user.getPassword();
         this.role = user.getRole();
+        this.active = user.isActive();
     }
 
     @Override
@@ -38,5 +40,10 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public String getPassword() {
         return password;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return active;
     }
 }

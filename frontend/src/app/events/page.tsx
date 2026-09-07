@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { EventCard, getCategoryConfig } from "@/components/event-card";
 import { EmptyState } from "@/components/empty-state";
+import { PaginationControls } from "@/components/pagination-controls";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,9 @@ export default function EventsPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<EventCategory | "ALL">("ALL");
   const [sortBy, setSortBy] = useState<"date_asc" | "date_desc" | "spots">("date_asc");
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -42,14 +46,29 @@ export default function EventsPage() {
         .listApproved({
           search: search || undefined,
           category: category === "ALL" ? undefined : category,
+          page,
         })
-        .then(setEvents)
+        .then((data) => {
+          setEvents(data.content);
+          setTotalPages(data.totalPages);
+          setTotalElements(data.totalElements);
+        })
         .catch(() => setError("Couldn't load events. Please check if the backend server is running."))
         .finally(() => setIsLoading(false));
     }, 250);
 
     return () => clearTimeout(timeout);
-  }, [search, category]);
+  }, [search, category, page]);
+
+  function handleCategoryChange(value: EventCategory | "ALL") {
+    setCategory(value);
+    setPage(0);
+  }
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPage(0);
+  }
 
   // Sorted events
   const processedEvents = useMemo(() => {
@@ -106,7 +125,7 @@ export default function EventsPage() {
             <Input
               placeholder="Search by event title, club name, or location..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10 h-11 bg-card/80 border-border/70 text-sm shadow-sm"
             />
           </div>
@@ -116,7 +135,7 @@ export default function EventsPage() {
             <Button
               variant={category === "ALL" ? "default" : "outline"}
               size="sm"
-              onClick={() => setCategory("ALL")}
+              onClick={() => handleCategoryChange("ALL")}
               className={`rounded-full text-xs font-semibold shrink-0 gap-1.5 transition-all ${
                 category === "ALL" ? "shadow-md glow-primary" : "border-border/60 hover:bg-accent/70"
               }`}
@@ -134,7 +153,7 @@ export default function EventsPage() {
                   key={cat}
                   variant={isSelected ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setCategory(cat)}
+                  onClick={() => handleCategoryChange(cat)}
                   className={`rounded-full text-xs font-semibold shrink-0 gap-1.5 transition-all ${
                     isSelected
                       ? "shadow-md glow-primary"
@@ -182,12 +201,20 @@ export default function EventsPage() {
         ) : (
           <div>
             <div className="mb-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Showing {processedEvents.length} event{processedEvents.length === 1 ? "" : "s"}
+              Showing {processedEvents.length} of {totalElements} event{totalElements === 1 ? "" : "s"}
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {processedEvents.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
+            </div>
+            <div className="mt-6 rounded-lg border">
+              <PaginationControls
+                page={page}
+                totalPages={totalPages}
+                totalElements={totalElements}
+                onPageChange={setPage}
+              />
             </div>
           </div>
         )}

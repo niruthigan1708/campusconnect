@@ -4,6 +4,7 @@ import com.campusconnect.dto.auth.AuthResponse;
 import com.campusconnect.dto.auth.LoginRequest;
 import com.campusconnect.dto.auth.RegisterRequest;
 import com.campusconnect.entity.Club;
+import com.campusconnect.entity.RefreshToken;
 import com.campusconnect.entity.Role;
 import com.campusconnect.entity.User;
 import com.campusconnect.exception.BadRequestException;
@@ -11,6 +12,7 @@ import com.campusconnect.exception.DuplicateResourceException;
 import com.campusconnect.repository.ClubRepository;
 import com.campusconnect.repository.UserRepository;
 import com.campusconnect.security.JwtService;
+import com.campusconnect.security.RefreshTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -41,6 +44,8 @@ class AuthServiceTest {
     private AuthenticationManager authenticationManager;
     @Mock
     private JwtService jwtService;
+    @Mock
+    private RefreshTokenService refreshTokenService;
 
     @InjectMocks
     private AuthService authService;
@@ -70,6 +75,7 @@ class AuthServiceTest {
     void setUp() {
         lenient().when(passwordEncoder.encode(anyString())).thenReturn("hashed-password");
         lenient().when(jwtService.generateToken(anyLong(), anyString(), anyString())).thenReturn("fake-jwt-token");
+        lenient().when(refreshTokenService.issueToken(any(User.class))).thenReturn("fake-refresh-token");
     }
 
     // --- register ---
@@ -148,6 +154,40 @@ class AuthServiceTest {
 
         assertThat(response.getEmail()).isEqualTo("sam@campus.edu");
         assertThat(response.getToken()).isEqualTo("fake-jwt-token");
+        assertThat(response.getRefreshToken()).isEqualTo("fake-refresh-token");
         verify(authenticationManager).authenticate(any());
+    }
+
+    // --- refresh ---
+
+    @Test
+    void refresh_issuesNewTokensForActiveUser() {
+        User user = User.builder().id(1L).name("Sam Student").email("sam@campus.edu").role(Role.STUDENT).active(true).build();
+        RefreshToken oldToken = RefreshToken.builder().id(10L).user(user).build();
+        when(refreshTokenService.validateAndConsume("raw-token")).thenReturn(oldToken);
+
+        AuthResponse response = authService.refresh("raw-token");
+
+        assertThat(response.getEmail()).isEqualTo("sam@campus.edu");
+        assertThat(response.getToken()).isEqualTo("fake-jwt-token");
+        verify(refreshTokenService).issueToken(user);
+    }
+
+    @Test
+    void refresh_throwsForDeactivatedUser() {
+        User user = User.builder().id(1L).name("Sam Student").email("sam@campus.edu").role(Role.STUDENT).active(false).build();
+        RefreshToken oldToken = RefreshToken.builder().id(10L).user(user).build();
+        when(refreshTokenService.validateAndConsume("raw-token")).thenReturn(oldToken);
+
+        assertThrows(DisabledException.class, () -> authService.refresh("raw-token"));
+    }
+
+    // --- logout ---
+
+    @Test
+    void logout_revokesTheGivenRefreshToken() {
+        authService.logout("raw-token");
+
+        verify(refreshTokenService).revoke("raw-token");
     }
 }

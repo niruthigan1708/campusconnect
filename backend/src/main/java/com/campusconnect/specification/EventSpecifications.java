@@ -1,8 +1,10 @@
 package com.campusconnect.specification;
 
+import com.campusconnect.entity.Club;
 import com.campusconnect.entity.Event;
 import com.campusconnect.entity.EventCategory;
 import com.campusconnect.entity.EventStatus;
+import jakarta.persistence.criteria.Join;
 import org.springframework.data.jpa.domain.Specification;
 
 public final class EventSpecifications {
@@ -20,9 +22,14 @@ public final class EventSpecifications {
 
     public static Specification<Event> matchesKeyword(String keyword) {
         String pattern = "%" + keyword.toLowerCase() + "%";
-        return (root, query, cb) -> cb.or(
-                cb.like(cb.lower(root.get("title")), pattern),
-                cb.like(cb.lower(root.get("description")), pattern)
-        );
+        return (root, query, cb) -> {
+            Join<Event, Club> club = root.join("club");
+            return cb.or(
+                    cb.like(cb.lower(root.get("title")), pattern),
+                    cb.like(cb.lower(root.get("description")), pattern),
+                    cb.like(cb.lower(root.get("location")), pattern),
+                    cb.like(cb.lower(club.get("name")), pattern)
+            );
+        };
     }
 }

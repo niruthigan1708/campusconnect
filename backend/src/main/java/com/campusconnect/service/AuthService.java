@@ -4,6 +4,7 @@ import com.campusconnect.dto.auth.AuthResponse;
 import com.campusconnect.dto.auth.LoginRequest;
 import com.campusconnect.dto.auth.RegisterRequest;
 import com.campusconnect.entity.Club;
+import com.campusconnect.entity.RefreshToken;
 import com.campusconnect.entity.Role;
 import com.campusconnect.entity.User;
 import com.campusconnect.exception.BadRequestException;
@@ -11,9 +12,11 @@ import com.campusconnect.exception.DuplicateResourceException;
 import com.campusconnect.repository.ClubRepository;
 import com.campusconnect.repository.UserRepository;
 import com.campusconnect.security.JwtService;
+import com.campusconnect.security.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -76,10 +80,28 @@ public class AuthService {
         return toAuthResponse(user);
     }
 
+    @Transactional
+    public AuthResponse refresh(String rawRefreshToken) {
+        RefreshToken oldToken = refreshTokenService.validateAndConsume(rawRefreshToken);
+        User user = oldToken.getUser();
+
+        if (!user.isActive()) {
+            throw new DisabledException("This account has been deactivated");
+        }
+
+        return toAuthResponse(user);
+    }
+
+    public void logout(String rawRefreshToken) {
+        refreshTokenService.revoke(rawRefreshToken);
+    }
+
     private AuthResponse toAuthResponse(User user) {
         String token = jwtService.generateToken(user.getId(), user.getEmail(), user.getRole().name());
+        String refreshToken = refreshTokenService.issueToken(user);
         return AuthResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken)
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())

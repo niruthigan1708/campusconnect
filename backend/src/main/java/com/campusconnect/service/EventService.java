@@ -22,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -33,9 +34,10 @@ public class EventService {
     private final EventRepository eventRepository;
     private final ClubRepository clubRepository;
     private final RegistrationRepository registrationRepository;
+    private final FileStorageService fileStorageService;
     private final EventMapper eventMapper;
 
-    public List<EventResponse> listApprovedEvents(EventCategory category, String search) {
+    public PageResponse<EventResponse> listApprovedEvents(EventCategory category, String search, Pageable pageable) {
         Specification<Event> spec = EventSpecifications.hasStatus(EventStatus.APPROVED);
         if (category != null) {
             spec = spec.and(EventSpecifications.hasCategory(category));
@@ -44,7 +46,10 @@ public class EventService {
             spec = spec.and(EventSpecifications.matchesKeyword(search));
         }
         Sort sort = Sort.by(Sort.Direction.ASC, "eventDate", "startTime");
-        return eventRepository.findAll(spec, sort).stream().map(eventMapper::toResponse).toList();
+        Pageable sortedPageable = org.springframework.data.domain.PageRequest.of(
+                pageable.getPageNumber(), pageable.getPageSize(), sort);
+        Page<Event> events = eventRepository.findAll(spec, sortedPageable);
+        return PageResponse.from(events, eventMapper::toResponse);
     }
 
     public List<EventResponse> listMyEvents(Long organizerId) {
@@ -171,6 +176,15 @@ public class EventService {
             throw new BadRequestException("Event is already " + event.getStatus().name().toLowerCase());
         }
         event.setStatus(EventStatus.CANCELLED);
+        return eventMapper.toResponse(event);
+    }
+
+    @Transactional
+    public EventResponse updateEventBanner(Long eventId, Long organizerId, MultipartFile file) {
+        Event event = findEventOrThrow(eventId);
+        assertOwnedBy(event, organizerId);
+
+        event.setBannerUrl(fileStorageService.storeImage(file, "events"));
         return eventMapper.toResponse(event);
     }
 

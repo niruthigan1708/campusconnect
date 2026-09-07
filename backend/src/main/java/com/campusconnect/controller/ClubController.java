@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -56,5 +57,15 @@ public class ClubController {
             @AuthenticationPrincipal CustomUserDetails principal
     ) {
         return clubService.updateMyClub(principal.getId(), request);
+    }
+
+    @PostMapping("/my/logo")
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @Operation(summary = "Upload a logo image for the current organizer's club")
+    public ClubResponse uploadMyClubLogo(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        return clubService.updateMyClubLogo(principal.getId(), file);
     }
 }

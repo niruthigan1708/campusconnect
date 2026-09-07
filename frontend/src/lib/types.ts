@@ -30,6 +30,7 @@ export const EVENT_CATEGORIES: EventCategory[] = [
 
 export interface AuthResponse {
   token: string;
+  refreshToken: string;
   id: number;
   name: string;
   email: string;
@@ -49,6 +50,7 @@ export interface EventResponse {
   category: EventCategory;
   status: EventStatus;
   rejectionReason: string | null;
+  bannerUrl: string | null;
   organizerId: number;
   organizerName: string;
   clubId: number;
@@ -83,6 +85,7 @@ export interface UserSummaryResponse {
   name: string;
   email: string;
   role: Role;
+  active: boolean;
   createdAt: string;
 }
 
@@ -91,6 +94,7 @@ export interface ClubResponse {
   name: string;
   description: string;
   contactEmail: string | null;
+  logoUrl: string | null;
   organizerId: number;
   organizerName: string;
   organizerEmail: string;

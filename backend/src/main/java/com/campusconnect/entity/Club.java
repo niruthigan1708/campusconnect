@@ -30,6 +30,8 @@ public class Club {
 
     private String contactEmail;
 
+    private String logoUrl;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizer_id", nullable = false, unique = true)
     private User organizer;

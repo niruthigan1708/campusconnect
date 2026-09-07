@@ -1,22 +1,24 @@
 package com.campusconnect.controller;
 
 import com.campusconnect.dto.admin.AdminDashboardResponse;
+import com.campusconnect.dto.admin.UpdateUserActiveRequest;
+import com.campusconnect.dto.admin.UpdateUserRoleRequest;
 import com.campusconnect.dto.admin.UserSummaryResponse;
 import com.campusconnect.dto.common.PageResponse;
 import com.campusconnect.dto.event.EventResponse;
 import com.campusconnect.entity.EventStatus;
 import com.campusconnect.entity.Role;
+import com.campusconnect.security.CustomUserDetails;
 import com.campusconnect.service.AdminService;
 import com.campusconnect.service.EventService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -40,6 +42,24 @@ public class AdminController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return adminService.listUsers(role, pageable);
+    }
+
+    @PatchMapping("/users/{id}/active")
+    public UserSummaryResponse setUserActive(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserActiveRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        return adminService.setUserActive(id, request.getActive(), principal.getId());
+    }
+
+    @PatchMapping("/users/{id}/role")
+    public UserSummaryResponse updateUserRole(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserRoleRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        return adminService.updateUserRole(id, request.getRole(), principal.getId());
     }
 
     @GetMapping("/events/pending")

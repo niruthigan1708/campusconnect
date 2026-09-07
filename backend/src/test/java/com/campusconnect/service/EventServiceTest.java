@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -38,6 +39,8 @@ class EventServiceTest {
     private RegistrationRepository registrationRepository;
     @Mock
     private EventMapper eventMapper;
+    @Mock
+    private FileStorageService fileStorageService;
 
     @InjectMocks
     private EventService eventService;
@@ -304,5 +307,27 @@ class EventServiceTest {
         eventService.getEvent(100L, principal);
 
         verify(eventMapper).toResponse(approvedEvent, true);
+    }
+
+    // --- updateEventBanner ---
+
+    @Test
+    void updateEventBanner_ownerCanUploadBanner() {
+        when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
+        MockMultipartFile file = new MockMultipartFile("file", "banner.jpg", "image/jpeg", new byte[]{1, 2, 3});
+        when(fileStorageService.storeImage(file, "events")).thenReturn("/uploads/events/generated.jpg");
+
+        eventService.updateEventBanner(100L, 1L, file);
+
+        assertThat(approvedEvent.getBannerUrl()).isEqualTo("/uploads/events/generated.jpg");
+    }
+
+    @Test
+    void updateEventBanner_throwsWhenRequesterDoesNotOwnEvent() {
+        when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
+        MockMultipartFile file = new MockMultipartFile("file", "banner.jpg", "image/jpeg", new byte[]{1, 2, 3});
+
+        assertThrows(BadRequestException.class, () -> eventService.updateEventBanner(100L, 2L, file));
+        verifyNoInteractions(fileStorageService);
     }
 }

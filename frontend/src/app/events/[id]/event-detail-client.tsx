@@ -22,7 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/lib/auth-context";
-import { ApiError, eventsApi } from "@/lib/api";
+import { ApiError, eventsApi, toAssetUrl } from "@/lib/api";
 import { EventResponse } from "@/lib/types";
 import { formatDate, formatTime, humanize } from "@/lib/format";
 import { generateGoogleCalendarUrl, downloadIcsFile } from "@/lib/calendar";
@@ -169,7 +169,12 @@ export function EventDetailClient({ id }: { id: string }) {
           <div className="space-y-8">
             {/* Visual Header Banner */}
             <div
-              className={`relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br ${categoryConfig?.headerGradient} p-6 sm:p-8`}
+              className={`relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br bg-cover bg-center ${categoryConfig?.headerGradient} p-6 sm:p-8`}
+              style={
+                event.bannerUrl
+                  ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.45)), url(${toAssetUrl(event.bannerUrl)})` }
+                  : undefined
+              }
             >
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2">
@@ -193,12 +198,18 @@ export function EventDetailClient({ id }: { id: string }) {
                 </div>
               </div>
 
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
+              <h1
+                className={`text-2xl sm:text-4xl font-extrabold tracking-tight ${event.bannerUrl ? "text-white" : ""}`}
+              >
                 {event.title}
               </h1>
 
-              <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5 font-medium text-foreground">
+              <div
+                className={`mt-3 flex flex-wrap items-center gap-4 text-sm ${
+                  event.bannerUrl ? "text-white/80" : "text-muted-foreground"
+                }`}
+              >
+                <span className={`flex items-center gap-1.5 font-medium ${event.bannerUrl ? "text-white" : "text-foreground"}`}>
                   <Building2 className="h-4 w-4 text-primary" />
                   {event.clubName}
                 </span>

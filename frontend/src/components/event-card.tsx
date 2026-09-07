@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/status-badge";
 import { EventResponse, EventCategory } from "@/lib/types";
 import { formatDate, formatTime, humanize } from "@/lib/format";
+import { toAssetUrl } from "@/lib/api";
 import {
   CalendarDays,
   MapPin,
@@ -94,7 +95,12 @@ export function EventCard({
       <Card className="relative flex h-full flex-col overflow-hidden border-border/70 bg-card/80 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5">
         {/* Category Header Banner */}
         <div
-          className={`flex h-20 items-center justify-between bg-gradient-to-br ${config.headerGradient} px-5 py-3 border-b border-border/40`}
+          className={`relative flex h-20 items-center justify-between bg-gradient-to-br ${config.headerGradient} px-5 py-3 border-b border-border/40 bg-cover bg-center`}
+          style={
+            event.bannerUrl
+              ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.35)), url(${toAssetUrl(event.bannerUrl)})` }
+              : undefined
+          }
         >
           <div className="flex items-center gap-2">
             <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-background/90 shadow-sm ${config.iconColor}`}>

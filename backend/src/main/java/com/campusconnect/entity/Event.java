@@ -55,6 +55,8 @@ public class Event {
 
     private String rejectionReason;
 
+    private String bannerUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizer_id", nullable = false)
     private User organizer;

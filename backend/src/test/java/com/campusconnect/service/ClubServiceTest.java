@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.Optional;
 
@@ -30,6 +31,8 @@ class ClubServiceTest {
     private EventRepository eventRepository;
     @Mock
     private EventMapper eventMapper;
+    @Mock
+    private FileStorageService fileStorageService;
 
     @InjectMocks
     private ClubService clubService;
@@ -88,5 +91,26 @@ class ClubServiceTest {
         when(clubRepository.existsById(999L)).thenReturn(false);
 
         assertThrows(ResourceNotFoundException.class, () -> clubService.getClubApprovedEvents(999L));
+    }
+
+    @Test
+    void updateMyClubLogo_storesImageAndUpdatesClub() {
+        when(clubRepository.findByOrganizerId(1L)).thenReturn(Optional.of(club));
+        MockMultipartFile file = new MockMultipartFile("file", "logo.png", "image/png", new byte[]{1, 2, 3});
+        when(fileStorageService.storeImage(file, "clubs")).thenReturn("/uploads/clubs/generated.png");
+
+        ClubResponse response = clubService.updateMyClubLogo(1L, file);
+
+        assertThat(club.getLogoUrl()).isEqualTo("/uploads/clubs/generated.png");
+        assertThat(response.getLogoUrl()).isEqualTo("/uploads/clubs/generated.png");
+    }
+
+    @Test
+    void updateMyClubLogo_throwsWhenOrganizerHasNoClub() {
+        when(clubRepository.findByOrganizerId(2L)).thenReturn(Optional.empty());
+        MockMultipartFile file = new MockMultipartFile("file", "logo.png", "image/png", new byte[]{1, 2, 3});
+
+        assertThrows(ResourceNotFoundException.class, () -> clubService.updateMyClubLogo(2L, file));
+        verifyNoInteractions(fileStorageService);
     }
 }

@@ -30,7 +30,9 @@ public class RegistrationService {
 
     @Transactional
     public RegistrationResponse register(Long studentId, Long eventId) {
-        Event event = eventRepository.findById(eventId)
+        // Pessimistic lock serializes concurrent registrations for this event so the
+        // capacity check below can't race with another request for the last spot.
+        Event event = eventRepository.findByIdForUpdate(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
 
         if (event.getStatus() != EventStatus.APPROVED) {
