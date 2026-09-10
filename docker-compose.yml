@@ -1,3 +1,15 @@
+# Optional: a containerized Postgres for developers who don't want to install
+# Postgres natively. This is NOT required if you already have Postgres running
+# locally (e.g. as a Windows/Mac service) - just point backend/.env at that
+# instead, as this project currently does.
+#
+# If you DO use this: run `docker compose up -d`, then set these in
+# backend/.env to match:
+#   DB_HOST=localhost
+#   DB_PORT=5432
+#   DB_NAME=campusconnect
+#   DB_USERNAME=postgres
+#   DB_PASSWORD=postgrespassword
 services:
   postgres:
     image: postgres:16-alpine

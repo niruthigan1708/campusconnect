@@ -26,6 +26,7 @@ public class PasswordResetService {
     private final PasswordResetTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
+    private final MailService mailService;
 
     @Value("${app.password-reset.expiration-ms}")
     private long resetExpirationMs;
@@ -46,9 +47,7 @@ public class PasswordResetService {
             tokenRepository.save(token);
 
             String resetLink = frontendUrl + "/reset-password?token=" + rawToken;
-            // No email provider is configured for this project, so the link is logged
-            // instead - a real deployment would send this through an email service.
-            log.info("Password reset requested for {}. Reset link: {}", email, resetLink);
+            mailService.sendPasswordResetEmail(email, resetLink);
         });
         // Always succeeds from the caller's perspective, whether or not the email
         // matched an account, so this endpoint can't be used to enumerate users.

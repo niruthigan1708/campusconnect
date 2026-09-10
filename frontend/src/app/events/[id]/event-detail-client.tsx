@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
+import { DashboardShell } from "@/components/dashboard-shell";
+import { adminNavItems, organizerNavItems } from "@/lib/nav-items";
 import { StatusBadge } from "@/components/status-badge";
 import { getCategoryConfig } from "@/components/event-card";
 import { Badge } from "@/components/ui/badge";
@@ -128,11 +130,28 @@ export function EventDetailClient({ id }: { id: string }) {
   const isOrganizerOwner = user && event && user.role === "ORGANIZER" && event.organizerId === user.id;
   const isAdmin = user && user.role === "ADMIN";
 
-  return (
-    <div className="flex min-h-full flex-col">
-      <Navbar />
+  // Admins/organizers arrive here from within their own dashboard (e.g. the
+  // admin events table, or an organizer's "My Events" list) - keep them inside
+  // that dashboard's shell and send "back" there, instead of dropping them
+  // onto the public site.
+  const isOrganizerRole = user?.role === "ORGANIZER";
+  const useDashboardShell = Boolean(isAdmin) || isOrganizerRole;
+  const backHref = isAdmin ? "/admin/events" : isOrganizerRole ? "/organizer/events" : "/events";
+  const backLabel = isAdmin || isOrganizerRole ? "Back to events" : "Back to all events";
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
+  // Inside DashboardShell the shell itself already provides page padding
+  // (matching every other admin/organizer page) and a full-width content
+  // column, so the public page's own outer padding/max-width would just
+  // double up the top gap and leave the fixed-width column stranded on the
+  // left of the wider dashboard content area.
+  const pageBody = (
+    <div
+      className={
+        useDashboardShell
+          ? ""
+          : "mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6 sm:py-12"
+      }
+    >
         {/* Back Link */}
         <div className="mb-6">
           <Button
@@ -141,9 +160,9 @@ export function EventDetailClient({ id }: { id: string }) {
             size="sm"
             className="gap-1.5 text-muted-foreground hover:text-foreground"
           >
-            <Link href="/events">
+            <Link href={backHref}>
               <ArrowLeft className="h-4 w-4" />
-              Back to all events
+              {backLabel}
             </Link>
           </Button>
         </div>
@@ -161,7 +180,7 @@ export function EventDetailClient({ id }: { id: string }) {
             description="This event doesn't exist, isn't approved yet, or has been removed."
             action={
               <Button asChild variant="outline" className="mt-2">
-                <Link href="/events">Back to events</Link>
+                <Link href={backHref}>{backLabel}</Link>
               </Button>
             }
           />
@@ -417,7 +436,21 @@ export function EventDetailClient({ id }: { id: string }) {
             </div>
           </div>
         )}
-      </main>
+    </div>
+  );
+
+  if (useDashboardShell) {
+    return (
+      <DashboardShell navItems={isAdmin ? adminNavItems : organizerNavItems}>
+        {pageBody}
+      </DashboardShell>
+    );
+  }
+
+  return (
+    <div className="flex min-h-full flex-col">
+      <Navbar />
+      <main className="flex flex-1 flex-col">{pageBody}</main>
     </div>
   );
 }

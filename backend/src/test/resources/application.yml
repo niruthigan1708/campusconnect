@@ -1,4 +1,6 @@
 spring:
+  flyway:
+    enabled: false
   datasource:
     url: jdbc:h2:mem:campusconnect_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
     driver-class-name: org.h2.Driver
@@ -9,6 +11,10 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: false
+  mail:
+    # Must be present (even empty) for MailSenderAutoConfiguration to create a
+    # JavaMailSender bean - MailService needs one to be injectable in tests.
+    host: ""
 
 app:
   jwt:
@@ -26,3 +32,6 @@ app:
     expiration-ms: 1800000
   uploads:
     dir: target/test-uploads
+  mail:
+    from: test@campusconnect.edu
+  seed-demo-data: false

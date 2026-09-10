@@ -13,13 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -39,16 +32,16 @@ import {
 import { CalendarCheck, Check, X } from "lucide-react";
 
 const STATUS_FILTERS: { value: EventStatus | "ALL"; label: string }[] = [
+  { value: "ALL", label: "All" },
   { value: "PENDING", label: "Pending" },
   { value: "APPROVED", label: "Approved" },
   { value: "REJECTED", label: "Rejected" },
   { value: "CANCELLED", label: "Cancelled" },
   { value: "COMPLETED", label: "Completed" },
-  { value: "ALL", label: "All statuses" },
 ];
 
 export default function AdminEventsPage() {
-  const [statusFilter, setStatusFilter] = useState<EventStatus | "ALL">("PENDING");
+  const [statusFilter, setStatusFilter] = useState<EventStatus | "ALL">("ALL");
   const [page, setPage] = useState(0);
   const [events, setEvents] = useState<EventResponse[] | null>(null);
   const [totalPages, setTotalPages] = useState(0);
@@ -105,23 +98,23 @@ export default function AdminEventsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Events</h1>
-          <p className="text-muted-foreground">Review pending events and manage the platform&apos;s event list</p>
-        </div>
-        <Select value={statusFilter} onValueChange={(v) => handleStatusFilterChange(v as EventStatus | "ALL")}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_FILTERS.map((s) => (
-              <SelectItem key={s.value} value={s.value}>
-                {s.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Events</h1>
+        <p className="text-muted-foreground">Review pending events and manage the platform&apos;s event list</p>
+      </div>
+
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {STATUS_FILTERS.map((s) => (
+          <Button
+            key={s.value}
+            variant={statusFilter === s.value ? "default" : "outline"}
+            size="sm"
+            onClick={() => handleStatusFilterChange(s.value)}
+            className="rounded-full text-xs font-semibold shrink-0"
+          >
+            {s.label}
+          </Button>
+        ))}
       </div>
 
       {events === null ? (
