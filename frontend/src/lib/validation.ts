@@ -12,9 +12,14 @@ export const forgotPasswordSchema = z.object({
 });
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
+const passwordComplexity = /^(?=.*[A-Za-z])(?=.*\d).+$/;
+
 export const resetPasswordSchema = z
   .object({
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    newPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(passwordComplexity, "Password must contain at least one letter and one number"),
     confirmPassword: z.string().min(1, "Please confirm your new password"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -27,7 +32,10 @@ export const registerSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().min(1, "Email is required").email("Enter a valid email"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(passwordComplexity, "Password must contain at least one letter and one number"),
     role: z.enum(["STUDENT", "ORGANIZER"]),
     clubName: z.string().optional(),
     clubDescription: z.string().optional(),

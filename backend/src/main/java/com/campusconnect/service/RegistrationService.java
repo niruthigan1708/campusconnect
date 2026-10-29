@@ -13,6 +13,7 @@ import com.campusconnect.repository.EventRepository;
 import com.campusconnect.repository.RegistrationRepository;
 import com.campusconnect.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,7 +80,7 @@ public class RegistrationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
 
         if (!isAdmin && !event.getOrganizer().getId().equals(requesterId)) {
-            throw new BadRequestException("You can only view registrations for your own events");
+            throw new AccessDeniedException("You can only view registrations for your own events");
         }
 
         return registrationRepository.findByEventId(eventId).stream().map(this::toResponse).toList();

@@ -18,6 +18,7 @@ public class CustomUserDetails implements UserDetails {
     private final String password;
     private final Role role;
     private final boolean active;
+    private final int tokenVersion;
 
     public CustomUserDetails(User user) {
         this.id = user.getId();
@@ -25,6 +26,7 @@ public class CustomUserDetails implements UserDetails {
         this.password = user.getPassword();
         this.role = user.getRole();
         this.active = user.isActive();
+        this.tokenVersion = user.getTokenVersion();
     }
 
     @Override

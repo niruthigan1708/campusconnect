@@ -39,9 +39,13 @@ class FileStorageServiceTest {
         }
     }
 
+    private static final byte[] PNG_SIGNATURE =
+            {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
+    private static final byte[] JPEG_SIGNATURE = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0, 0, 0};
+
     @Test
     void storeImage_savesFileAndReturnsPublicUrl() {
-        MockMultipartFile file = new MockMultipartFile("file", "logo.png", "image/png", new byte[]{1, 2, 3});
+        MockMultipartFile file = new MockMultipartFile("file", "logo.png", "image/png", PNG_SIGNATURE);
 
         String url = fileStorageService.storeImage(file, "clubs");
 
@@ -59,7 +63,7 @@ class FileStorageServiceTest {
 
     @Test
     void storeImage_throwsWhenContentTypeNotAllowed() {
-        MockMultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", new byte[]{1, 2, 3});
+        MockMultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", PNG_SIGNATURE);
 
         assertThrows(BadRequestException.class, () -> fileStorageService.storeImage(file, "clubs"));
     }
@@ -67,6 +71,15 @@ class FileStorageServiceTest {
     @Test
     void storeImage_throwsWhenFileExceedsSizeLimit() {
         MockMultipartFile file = new MockMultipartFile("file", "big.png", "image/png", new byte[6 * 1024 * 1024]);
+
+        assertThrows(BadRequestException.class, () -> fileStorageService.storeImage(file, "clubs"));
+    }
+
+    @Test
+    void storeImage_throwsWhenContentDoesNotMatchDeclaredType() {
+        // Declares PNG but the bytes are actually a JPEG signature - the declared
+        // Content-Type header alone is not trusted.
+        MockMultipartFile file = new MockMultipartFile("file", "fake.png", "image/png", JPEG_SIGNATURE);
 
         assertThrows(BadRequestException.class, () -> fileStorageService.storeImage(file, "clubs"));
     }

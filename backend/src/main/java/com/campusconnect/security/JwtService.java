@@ -24,13 +24,14 @@ public class JwtService {
         this.expirationMs = expirationMs;
     }
 
-    public String generateToken(Long userId, String email, String role) {
+    public String generateToken(Long userId, String email, String role, int tokenVersion) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
         return Jwts.builder()
                 .subject(email)
                 .claim("userId", userId)
                 .claim("role", role)
+                .claim("tv", tokenVersion)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(signingKey)
@@ -39,6 +40,16 @@ public class JwtService {
 
     public String extractEmail(String token) {
         return extractClaims(token).getSubject();
+    }
+
+    /**
+     * Compared against the user's current tokenVersion on every request, so a
+     * password reset can invalidate already-issued access tokens immediately
+     * instead of waiting out their expiry.
+     */
+    public int extractTokenVersion(String token) {
+        Object tv = extractClaims(token).get("tv");
+        return tv == null ? 0 : ((Number) tv).intValue();
     }
 
     public boolean isTokenValid(String token) {

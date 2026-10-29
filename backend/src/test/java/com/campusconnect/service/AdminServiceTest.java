@@ -40,10 +40,12 @@ class AdminServiceTest {
     private AdminService adminService;
 
     private User student;
+    private User admin;
 
     @BeforeEach
     void setUp() {
         student = User.builder().id(5L).name("Sam Student").email("sam@campus.edu").role(Role.STUDENT).active(true).build();
+        admin = User.builder().id(7L).name("Pat Admin").email("pat@campus.edu").role(Role.ADMIN).active(true).build();
     }
 
     @Test
@@ -67,6 +69,25 @@ class AdminServiceTest {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> adminService.setUserActive(999L, false, 99L));
+    }
+
+    @Test
+    void setUserActive_throwsWhenDeactivatingTheOnlyActiveAdmin() {
+        when(userRepository.findById(7L)).thenReturn(Optional.of(admin));
+        when(userRepository.countByRoleAndActive(Role.ADMIN, true)).thenReturn(1L);
+
+        assertThrows(BadRequestException.class, () -> adminService.setUserActive(7L, false, 99L));
+        assertThat(admin.isActive()).isTrue();
+    }
+
+    @Test
+    void setUserActive_allowsDeactivatingAnAdminWhenAnotherAdminIsStillActive() {
+        when(userRepository.findById(7L)).thenReturn(Optional.of(admin));
+        when(userRepository.countByRoleAndActive(Role.ADMIN, true)).thenReturn(2L);
+
+        adminService.setUserActive(7L, false, 99L);
+
+        assertThat(admin.isActive()).isFalse();
     }
 
     @Test
@@ -106,5 +127,23 @@ class AdminServiceTest {
         adminService.updateUserRole(5L, Role.ORGANIZER, 99L);
 
         verify(clubRepository, never()).save(any());
+    }
+
+    @Test
+    void updateUserRole_throwsWhenDemotingTheOnlyActiveAdmin() {
+        when(userRepository.findById(7L)).thenReturn(Optional.of(admin));
+        when(userRepository.countByRoleAndActive(Role.ADMIN, true)).thenReturn(1L);
+
+        assertThrows(BadRequestException.class, () -> adminService.updateUserRole(7L, Role.ORGANIZER, 99L));
+        assertThat(admin.getRole()).isEqualTo(Role.ADMIN);
+    }
+
+    @Test
+    void updateUserRole_allowsPromotingAnotherUserToAdminEvenAsTheOnlyActiveAdmin() {
+        when(userRepository.findById(5L)).thenReturn(Optional.of(student));
+
+        adminService.updateUserRole(5L, Role.ADMIN, 99L);
+
+        assertThat(student.getRole()).isEqualTo(Role.ADMIN);
     }
 }

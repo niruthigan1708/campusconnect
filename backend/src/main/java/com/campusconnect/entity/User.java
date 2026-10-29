@@ -38,6 +38,12 @@ public class User {
     @Column(nullable = false)
     private boolean active;
 
+    // Bumped on password reset so already-issued JWT access tokens are
+    // rejected immediately instead of staying valid until they expire.
+    @Builder.Default
+    @Column(name = "token_version", nullable = false)
+    private int tokenVersion = 0;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

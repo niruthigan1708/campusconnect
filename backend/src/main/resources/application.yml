@@ -24,6 +24,7 @@ spring:
       # mapped entities match what Flyway created instead of auto-patching it.
       ddl-auto: validate
     show-sql: false
+    open-in-view: false
     properties:
       hibernate:
         format_sql: true
@@ -51,7 +52,7 @@ server:
 app:
   jwt:
     secret: ${JWT_SECRET:change-this-to-a-long-random-secret-in-your-env-file-at-least-256-bits}
-    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+    expiration-ms: ${JWT_EXPIRATION_MS:900000}
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
   admin:
     name: ${ADMIN_NAME:Platform Admin}

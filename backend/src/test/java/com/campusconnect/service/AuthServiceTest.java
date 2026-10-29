@@ -74,7 +74,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         lenient().when(passwordEncoder.encode(anyString())).thenReturn("hashed-password");
-        lenient().when(jwtService.generateToken(anyLong(), anyString(), anyString())).thenReturn("fake-jwt-token");
+        lenient().when(jwtService.generateToken(anyLong(), anyString(), anyString(), anyInt())).thenReturn("fake-jwt-token");
         lenient().when(refreshTokenService.issueToken(any(User.class))).thenReturn("fake-refresh-token");
     }
 

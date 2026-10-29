@@ -16,6 +16,7 @@ import com.campusconnect.repository.RegistrationRepository;
 import com.campusconnect.security.CustomUserDetails;
 import com.campusconnect.specification.EventSpecifications;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -195,7 +196,7 @@ public class EventService {
 
     private void assertOwnedBy(Event event, Long organizerId) {
         if (!event.getOrganizer().getId().equals(organizerId)) {
-            throw new BadRequestException("You can only manage your own events");
+            throw new AccessDeniedException("You can only manage your own events");
         }
     }
 

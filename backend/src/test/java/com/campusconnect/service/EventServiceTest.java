@@ -10,6 +10,7 @@ import com.campusconnect.repository.EventRepository;
 import com.campusconnect.repository.RegistrationRepository;
 import com.campusconnect.security.CustomUserDetails;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -148,7 +149,7 @@ class EventServiceTest {
     void updateEvent_throwsWhenRequesterDoesNotOwnEvent() {
         when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
 
-        assertThrows(BadRequestException.class, () -> eventService.updateEvent(100L, 2L, validRequest()));
+        assertThrows(AccessDeniedException.class, () -> eventService.updateEvent(100L, 2L, validRequest()));
     }
 
     @Test
@@ -246,7 +247,7 @@ class EventServiceTest {
     void cancelEvent_nonOwnerNonAdminCannotCancel() {
         when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
 
-        assertThrows(BadRequestException.class, () -> eventService.cancelEvent(100L, 2L, false));
+        assertThrows(AccessDeniedException.class, () -> eventService.cancelEvent(100L, 2L, false));
         assertThat(approvedEvent.getStatus()).isEqualTo(EventStatus.APPROVED);
     }
 
@@ -327,7 +328,7 @@ class EventServiceTest {
         when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
         MockMultipartFile file = new MockMultipartFile("file", "banner.jpg", "image/jpeg", new byte[]{1, 2, 3});
 
-        assertThrows(BadRequestException.class, () -> eventService.updateEventBanner(100L, 2L, file));
+        assertThrows(AccessDeniedException.class, () -> eventService.updateEventBanner(100L, 2L, file));
         verifyNoInteractions(fileStorageService);
     }
 }

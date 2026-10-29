@@ -9,7 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -53,17 +52,50 @@ public class FileStorageService {
         }
 
         try {
+            byte[] content = file.getBytes();
+            if (!matchesDeclaredImageType(content, file.getContentType())) {
+                throw new BadRequestException("The file's content does not match a valid JPEG, PNG, or WEBP image");
+            }
+
             Path subdirPath = uploadRoot.resolve(subdirectory).normalize();
             Files.createDirectories(subdirPath);
 
             String filename = UUID.randomUUID() + extension;
             Path destination = subdirPath.resolve(filename);
-            file.transferTo(destination.toFile());
+            Files.write(destination, content);
 
             return "/uploads/" + subdirectory + "/" + filename;
         } catch (IOException e) {
             throw new IllegalStateException("Failed to store uploaded file", e);
         }
+    }
+
+    /**
+     * Checks the file's actual bytes against the declared content type's magic
+     * number instead of trusting the client-supplied Content-Type header alone.
+     */
+    private boolean matchesDeclaredImageType(byte[] content, String contentType) {
+        return switch (contentType) {
+            case "image/jpeg" -> startsWith(content, (byte) 0xFF, (byte) 0xD8, (byte) 0xFF);
+            case "image/png" -> startsWith(content,
+                    (byte) 0x89, (byte) 0x50, (byte) 0x4E, (byte) 0x47, (byte) 0x0D, (byte) 0x0A, (byte) 0x1A, (byte) 0x0A);
+            case "image/webp" -> content.length >= 12
+                    && startsWith(content, (byte) 'R', (byte) 'I', (byte) 'F', (byte) 'F')
+                    && content[8] == 'W' && content[9] == 'E' && content[10] == 'B' && content[11] == 'P';
+            default -> false;
+        };
+    }
+
+    private boolean startsWith(byte[] content, byte... signature) {
+        if (content.length < signature.length) {
+            return false;
+        }
+        for (int i = 0; i < signature.length; i++) {
+            if (content[i] != signature[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     Path getUploadRoot() {

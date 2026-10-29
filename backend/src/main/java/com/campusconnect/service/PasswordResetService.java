@@ -66,7 +66,11 @@ public class PasswordResetService {
         user.setPassword(passwordEncoder.encode(newPassword));
         token.setUsed(true);
 
-        // A password reset invalidates any sessions started before it.
+        // A password reset invalidates any sessions started before it: refresh
+        // tokens are revoked outright, and bumping tokenVersion makes already-issued
+        // JWT access tokens fail validation on their very next request (see
+        // JwtAuthenticationFilter) instead of staying valid until they expire.
         refreshTokenService.revokeAllForUser(user);
+        user.setTokenVersion(user.getTokenVersion() + 1);
     }
 }

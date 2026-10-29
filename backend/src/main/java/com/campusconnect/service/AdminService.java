@@ -55,6 +55,11 @@ public class AdminService {
             throw new BadRequestException("You cannot deactivate your own account");
         }
         User user = findUserOrThrow(targetUserId);
+
+        if (!active && user.getRole() == Role.ADMIN && user.isActive() && isLastActiveAdmin()) {
+            throw new BadRequestException("Cannot deactivate the only remaining active admin");
+        }
+
         user.setActive(active);
         return toSummary(user);
     }
@@ -65,6 +70,11 @@ public class AdminService {
             throw new BadRequestException("You cannot change your own role");
         }
         User user = findUserOrThrow(targetUserId);
+
+        if (newRole != Role.ADMIN && user.getRole() == Role.ADMIN && user.isActive() && isLastActiveAdmin()) {
+            throw new BadRequestException("Cannot change the role of the only remaining active admin");
+        }
+
         user.setRole(newRole);
 
         // A newly-promoted organizer needs a club before they can create events;
@@ -78,6 +88,10 @@ public class AdminService {
         }
 
         return toSummary(user);
+    }
+
+    private boolean isLastActiveAdmin() {
+        return userRepository.countByRoleAndActive(Role.ADMIN, true) <= 1;
     }
 
     private User findUserOrThrow(Long userId) {

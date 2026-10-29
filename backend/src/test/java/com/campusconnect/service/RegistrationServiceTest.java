@@ -15,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -165,7 +166,7 @@ class RegistrationServiceTest {
     void getEventRegistrations_nonOwnerNonAdminCannotView() {
         when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
 
-        assertThrows(BadRequestException.class, () -> registrationService.getEventRegistrations(100L, 2L, false));
+        assertThrows(AccessDeniedException.class, () -> registrationService.getEventRegistrations(100L, 2L, false));
         verify(registrationRepository, never()).findByEventId(any());
     }
 }
