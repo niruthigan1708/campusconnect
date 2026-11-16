@@ -51,7 +51,8 @@ server:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:change-this-to-a-long-random-secret-in-your-env-file-at-least-256-bits}
+    # No default on purpose: JwtService refuses to start without a real secret.
+    secret: ${JWT_SECRET:}
     expiration-ms: ${JWT_EXPIRATION_MS:900000}
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
   admin:

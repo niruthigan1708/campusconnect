@@ -13,6 +13,10 @@ import java.util.Date;
 @Service
 public class JwtService {
 
+    /** HS256 needs a key of at least 256 bits. */
+    static final int MIN_SECRET_BYTES = 32;
+    private static final String PLACEHOLDER_PREFIX = "change-this";
+
     private final SecretKey signingKey;
     private final long expirationMs;
 
@@ -20,8 +24,28 @@ public class JwtService {
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.expiration-ms}") long expirationMs
     ) {
+        validateSecret(secret);
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
+    }
+
+    /**
+     * Fails fast at startup rather than silently signing tokens with a
+     * missing, placeholder or weak secret that anyone could use to forge them.
+     */
+    static void validateSecret(String secret) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT_SECRET is not set. Generate one with: openssl rand -base64 64");
+        }
+        if (secret.trim().toLowerCase().startsWith(PLACEHOLDER_PREFIX)) {
+            throw new IllegalStateException(
+                    "JWT_SECRET is still the example placeholder. Generate one with: openssl rand -base64 64");
+        }
+        if (secret.getBytes(StandardCharsets.UTF_8).length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "JWT_SECRET must be at least " + MIN_SECRET_BYTES + " bytes (256 bits).");
+        }
     }
 
     public String generateToken(Long userId, String email, String role, int tokenVersion) {
