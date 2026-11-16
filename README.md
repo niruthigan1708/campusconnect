@@ -57,7 +57,7 @@ Edit `backend/.env` and fill in at minimum:
 | Variable | Purpose |
 |---|---|
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` | Your Postgres connection |
-| `JWT_SECRET` | Generate with `openssl rand -base64 64` |
+| `JWT_SECRET` | **Required.** Generate with `openssl rand -base64 64`. The backend refuses to start if it is missing, shorter than 32 bytes, or still the `.env.example` placeholder |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Creates an admin account on first startup (only way to get an ADMIN account - public registration can't create one) |
 
 Everything else has a sane default for local dev (see `.env.example` for the
