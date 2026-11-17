@@ -31,6 +31,7 @@ keeps the current session in `localStorage`.
 - PostgreSQL running locally (a `docker-compose.yml` is provided as an
   alternative if you don't want to install it natively - see the comments in
   that file)
+- Docker (only needed to run the backend integration tests)
 
 ---
 
@@ -179,9 +180,27 @@ you can exercise every status without manually creating them.
 ## Testing
 
 ```
-cd backend && ./mvnw test      # JUnit + Mockito unit tests
+cd backend && ./mvnw test      # unit + integration tests (needs Docker running)
 cd frontend && npm test        # Vitest unit tests
 ```
+
+Backend tests come in two kinds:
+
+- **Unit tests** (Mockito) for service logic - fast, no database.
+- **Integration tests** (classes annotated `@IntegrationTest`) boot the whole
+  app against a throwaway **PostgreSQL 16 in Docker** via
+  [Testcontainers](https://testcontainers.com/). Flyway runs the real
+  migrations and Hibernate validates the schema, so these also catch
+  migration/entity mismatches. They include:
+  - `ApiSecurityIntegrationTest` - role and ownership rules for every kind of
+    endpoint through the real security filter chain, plus token revocation.
+  - `RegistrationConcurrencyIntegrationTest` - 20 students register for a
+    5-seat event simultaneously; exactly 5 must succeed (guards the row lock
+    that prevents overbooking).
+
+Docker Desktop (or another Docker engine) must be running for the
+integration tests; the first run pulls the `postgres:16-alpine` image. CI
+runs everything on every push/PR via GitHub Actions.
 
 ---
 
