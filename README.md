@@ -203,10 +203,13 @@ cd frontend && npm test        # Vitest unit tests
 
 - Email is best-effort: without `MAIL_HOST` configured, password reset links
   only appear in the server log, not in a real inbox.
-- Rate limiting on `/api/auth/login`, `/api/auth/register`, and
-  `/api/auth/forgot-password` is in-memory per-instance (10 requests/min per
-  IP+path) - fine for a single backend instance, but a multi-instance
-  deployment behind a load balancer would need a shared store (e.g. Redis)
-  instead.
+- Rate limiting on `/api/auth/login`, `/api/auth/register`,
+  `/api/auth/forgot-password`, and `/api/auth/reset-password` is in-memory
+  per-instance (10 requests/min per IP+path, `429` with `Retry-After`) - fine
+  for a single backend instance, but a multi-instance deployment behind a load
+  balancer would need a shared store (e.g. Redis) instead. Behind a reverse
+  proxy the client IP is taken from `X-Forwarded-For`
+  (`FORWARD_HEADERS_STRATEGY`, default `native`). Note that users behind one
+  shared NAT IP (e.g. a campus network) share this limit.
 - Single-server file storage for uploads (no CDN/object storage) - fine for a
   small deployment, not for scaling out to multiple backend instances.

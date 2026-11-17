@@ -48,6 +48,11 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  # Behind a reverse proxy (Nginx/Caddy), use the real client IP from
+  # X-Forwarded-For for rate limiting and logs. Tomcat only honours the header
+  # when the request comes from a trusted internal address (private ranges and
+  # localhost), so clients hitting the backend directly can't spoof it.
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:native}
 
 app:
   jwt:
