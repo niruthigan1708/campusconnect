@@ -107,11 +107,20 @@ public class EventService {
     public EventResponse updateEvent(Long eventId, Long organizerId, EventRequest request) {
         validateTimes(request);
 
-        Event event = findEventOrThrow(eventId);
+        // Same row lock RegistrationService.register takes, so a registration can't
+        // land between the capacity check below and this update committing.
+        Event event = eventRepository.findByIdForUpdate(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
         assertOwnedBy(event, organizerId);
 
         if (event.getStatus() == EventStatus.CANCELLED || event.getStatus() == EventStatus.COMPLETED) {
             throw new BadRequestException("Cannot edit a " + event.getStatus().name().toLowerCase() + " event");
+        }
+
+        long registeredCount = registrationRepository.countByEventId(eventId);
+        if (request.getCapacity() < registeredCount) {
+            throw new BadRequestException(
+                    "Capacity cannot be lower than the " + registeredCount + " students already registered");
         }
 
         event.setTitle(request.getTitle());

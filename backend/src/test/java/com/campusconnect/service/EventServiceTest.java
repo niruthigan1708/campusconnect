@@ -136,7 +136,7 @@ class EventServiceTest {
     @Test
     void updateEvent_resetsApprovedEventBackToPending() {
         approvedEvent.setStatus(EventStatus.APPROVED);
-        when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
 
         eventService.updateEvent(100L, 1L, validRequest());
 
@@ -147,7 +147,7 @@ class EventServiceTest {
 
     @Test
     void updateEvent_throwsWhenRequesterDoesNotOwnEvent() {
-        when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
 
         assertThrows(AccessDeniedException.class, () -> eventService.updateEvent(100L, 2L, validRequest()));
     }
@@ -155,16 +155,36 @@ class EventServiceTest {
     @Test
     void updateEvent_throwsWhenEventIsCancelled() {
         approvedEvent.setStatus(EventStatus.CANCELLED);
-        when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
 
         assertThrows(BadRequestException.class, () -> eventService.updateEvent(100L, 1L, validRequest()));
     }
 
     @Test
     void updateEvent_throwsWhenEventNotFound() {
-        when(eventRepository.findById(999L)).thenReturn(Optional.empty());
+        when(eventRepository.findByIdForUpdate(999L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> eventService.updateEvent(999L, 1L, validRequest()));
+    }
+
+    @Test
+    void updateEvent_throwsWhenCapacityBelowExistingRegistrations() {
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
+        when(registrationRepository.countByEventId(100L)).thenReturn(31L);
+
+        EventRequest request = validRequest(); // capacity 30
+        assertThrows(BadRequestException.class, () -> eventService.updateEvent(100L, 1L, request));
+        assertThat(approvedEvent.getCapacity()).isEqualTo(50);
+    }
+
+    @Test
+    void updateEvent_allowsCapacityEqualToExistingRegistrations() {
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
+        when(registrationRepository.countByEventId(100L)).thenReturn(30L);
+
+        eventService.updateEvent(100L, 1L, validRequest());
+
+        assertThat(approvedEvent.getCapacity()).isEqualTo(30);
     }
 
     // --- deleteEvent ---
