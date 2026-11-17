@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -82,6 +83,7 @@ public class EventService {
     @Transactional
     public EventResponse createEvent(Long organizerId, EventRequest request) {
         validateTimes(request);
+        validateNotInPast(request);
 
         Club club = clubRepository.findByOrganizerId(organizerId)
                 .orElseThrow(() -> new IllegalStateException("Organizer has no associated club: " + organizerId));
@@ -115,6 +117,14 @@ public class EventService {
 
         if (event.getStatus() == EventStatus.CANCELLED || event.getStatus() == EventStatus.COMPLETED) {
             throw new BadRequestException("Cannot edit a " + event.getStatus().name().toLowerCase() + " event");
+        }
+
+        // Only when rescheduling: an in-progress event must stay editable (e.g. to
+        // fix a typo) even though its start time is now in the past.
+        boolean rescheduled = !request.getEventDate().equals(event.getEventDate())
+                || !request.getStartTime().equals(event.getStartTime());
+        if (rescheduled) {
+            validateNotInPast(request);
         }
 
         long registeredCount = registrationRepository.countByEventId(eventId);
@@ -162,6 +172,9 @@ public class EventService {
         Event event = findEventOrThrow(eventId);
         if (event.getStatus() != EventStatus.PENDING) {
             throw new BadRequestException("Only pending events can be approved");
+        }
+        if (event.hasStarted(LocalDateTime.now())) {
+            throw new BadRequestException("Cannot approve an event that has already started");
         }
         event.setStatus(EventStatus.APPROVED);
         event.setRejectionReason(null);
@@ -227,6 +240,13 @@ public class EventService {
     private void validateTimes(EventRequest request) {
         if (!request.getStartTime().isBefore(request.getEndTime())) {
             throw new BadRequestException("Start time must be before end time");
+        }
+    }
+
+    /** @FutureOrPresent on the DTO only checks the date, so "today at an earlier hour" got through. */
+    private void validateNotInPast(EventRequest request) {
+        if (!LocalDateTime.of(request.getEventDate(), request.getStartTime()).isAfter(LocalDateTime.now())) {
+            throw new BadRequestException("Event start time must be in the future");
         }
     }
 }

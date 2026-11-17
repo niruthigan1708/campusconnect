@@ -17,6 +17,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -38,6 +39,10 @@ public class RegistrationService {
 
         if (event.getStatus() != EventStatus.APPROVED) {
             throw new BadRequestException("This event is not open for registration");
+        }
+
+        if (event.hasStarted(LocalDateTime.now())) {
+            throw new BadRequestException("Registration is closed because this event has already started");
         }
 
         if (registrationRepository.existsByStudentIdAndEventId(studentId, eventId)) {
@@ -65,6 +70,10 @@ public class RegistrationService {
     public void cancelRegistration(Long studentId, Long eventId) {
         Registration registration = registrationRepository.findByStudentIdAndEventId(studentId, eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("You are not registered for this event"));
+        // Keeps the attendance record intact once the event is under way or over.
+        if (registration.getEvent().hasStarted(LocalDateTime.now())) {
+            throw new BadRequestException("You can't cancel a registration after the event has started");
+        }
         registrationRepository.delete(registration);
     }
 

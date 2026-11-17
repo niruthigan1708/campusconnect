@@ -71,6 +71,18 @@ public class Event {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    public LocalDateTime startsAt() {
+        return LocalDateTime.of(eventDate, startTime);
+    }
+
+    public LocalDateTime endsAt() {
+        return LocalDateTime.of(eventDate, endTime);
+    }
+
+    public boolean hasStarted(LocalDateTime now) {
+        return !now.isBefore(startsAt());
+    }
+
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();

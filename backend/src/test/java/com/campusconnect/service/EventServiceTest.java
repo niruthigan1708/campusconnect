@@ -370,4 +370,47 @@ class EventServiceTest {
         assertThrows(AccessDeniedException.class, () -> eventService.updateEventBanner(100L, 2L, file));
         verifyNoInteractions(fileStorageService);
     }
+
+    // --- past-event rules ---
+
+    @Test
+    void createEvent_throwsWhenStartIsInThePast() {
+        EventRequest request = validRequest();
+        request.setEventDate(LocalDate.now().minusDays(1));
+
+        assertThrows(BadRequestException.class, () -> eventService.createEvent(1L, request));
+        verify(eventRepository, never()).save(any());
+    }
+
+    @Test
+    void approveEvent_throwsWhenEventHasAlreadyStarted() {
+        pendingEvent.setEventDate(LocalDate.now().minusDays(1));
+        when(eventRepository.findById(101L)).thenReturn(Optional.of(pendingEvent));
+
+        assertThrows(BadRequestException.class, () -> eventService.approveEvent(101L));
+        assertThat(pendingEvent.getStatus()).isEqualTo(EventStatus.PENDING);
+    }
+
+    @Test
+    void updateEvent_throwsWhenReschedulingIntoThePast() {
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
+        EventRequest request = validRequest();
+        request.setEventDate(LocalDate.now().minusDays(1));
+
+        assertThrows(BadRequestException.class, () -> eventService.updateEvent(100L, 1L, request));
+    }
+
+    @Test
+    void updateEvent_allowsEditingInProgressEventWithoutRescheduling() {
+        approvedEvent.setEventDate(LocalDate.now().minusDays(1)); // already started
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
+        EventRequest request = validRequest();
+        request.setEventDate(approvedEvent.getEventDate());
+        request.setStartTime(approvedEvent.getStartTime());
+        request.setEndTime(approvedEvent.getEndTime());
+
+        eventService.updateEvent(100L, 1L, request);
+
+        assertThat(approvedEvent.getTitle()).isEqualTo("New Event");
+    }
 }

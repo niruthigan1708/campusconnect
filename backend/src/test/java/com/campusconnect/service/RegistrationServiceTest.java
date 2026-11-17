@@ -169,4 +169,25 @@ class RegistrationServiceTest {
         assertThrows(AccessDeniedException.class, () -> registrationService.getEventRegistrations(100L, 2L, false));
         verify(registrationRepository, never()).findByEventId(any());
     }
+
+    // --- events that have already started ---
+
+    @Test
+    void register_throwsWhenEventHasAlreadyStarted() {
+        approvedEvent.setEventDate(LocalDate.now().minusDays(1));
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
+
+        assertThrows(BadRequestException.class, () -> registrationService.register(5L, 100L));
+        verify(registrationRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelRegistration_throwsWhenEventHasAlreadyStarted() {
+        approvedEvent.setEventDate(LocalDate.now().minusDays(1));
+        Registration registration = Registration.builder().id(1L).student(student).event(approvedEvent).build();
+        when(registrationRepository.findByStudentIdAndEventId(5L, 100L)).thenReturn(Optional.of(registration));
+
+        assertThrows(BadRequestException.class, () -> registrationService.cancelRegistration(5L, 100L));
+        verify(registrationRepository, never()).delete(any());
+    }
 }
