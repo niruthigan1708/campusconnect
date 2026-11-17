@@ -142,6 +142,9 @@ public class EventService {
             }
         }
 
+        // registrations.event_id is a plain foreign key (no ON DELETE CASCADE), so
+        // the event's registrations must go first or the delete fails on the FK.
+        registrationRepository.deleteByEventId(eventId);
         eventRepository.delete(event);
     }
 

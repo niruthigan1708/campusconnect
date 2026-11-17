@@ -195,6 +195,25 @@ class EventServiceTest {
         verify((CrudRepository<Event, Long>) eventRepository).delete(approvedEvent);
     }
 
+    @Test
+    void deleteEvent_removesRegistrationsBeforeTheEvent() {
+        when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
+
+        eventService.deleteEvent(100L, 99L, true);
+
+        var inOrder = inOrder(registrationRepository, eventRepository);
+        inOrder.verify(registrationRepository).deleteByEventId(100L);
+        inOrder.verify((CrudRepository<Event, Long>) eventRepository).delete(approvedEvent);
+    }
+
+    @Test
+    void deleteEvent_rejectedRequestLeavesRegistrationsUntouched() {
+        when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
+
+        assertThrows(BadRequestException.class, () -> eventService.deleteEvent(100L, 1L, false));
+        verify(registrationRepository, never()).deleteByEventId(any());
+    }
+
     // --- approve / reject ---
 
     @Test
