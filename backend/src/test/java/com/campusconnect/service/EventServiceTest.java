@@ -413,4 +413,14 @@ class EventServiceTest {
 
         assertThat(approvedEvent.getTitle()).isEqualTo("New Event");
     }
+
+    @Test
+    void getEvent_anyoneCanViewCompletedEvent() {
+        approvedEvent.setStatus(EventStatus.COMPLETED);
+        when(eventRepository.findById(100L)).thenReturn(Optional.of(approvedEvent));
+
+        eventService.getEvent(100L, null);
+
+        verify(eventMapper).toResponse(approvedEvent, null);
+    }
 }

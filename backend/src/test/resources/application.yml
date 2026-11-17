@@ -35,3 +35,6 @@ app:
   mail:
     from: test@campusconnect.edu
   seed-demo-data: false
+  events:
+    # Tests call EventCompletionScheduler directly; keep the background run out of the way.
+    completion-check-initial-delay-ms: 3600000

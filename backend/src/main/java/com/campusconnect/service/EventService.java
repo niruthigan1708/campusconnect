@@ -226,7 +226,7 @@ public class EventService {
     }
 
     private void assertViewable(Event event, CustomUserDetails principal) {
-        if (event.getStatus() == EventStatus.APPROVED) {
+        if (event.getStatus() == EventStatus.APPROVED || event.getStatus() == EventStatus.COMPLETED) {
             return;
         }
         boolean isOwner = principal != null && principal.getId().equals(event.getOrganizer().getId());
