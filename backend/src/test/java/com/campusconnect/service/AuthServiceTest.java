@@ -12,6 +12,7 @@ import com.campusconnect.exception.DuplicateResourceException;
 import com.campusconnect.repository.ClubRepository;
 import com.campusconnect.repository.UserRepository;
 import com.campusconnect.security.JwtService;
+import com.campusconnect.security.LoginAttemptService;
 import com.campusconnect.security.RefreshTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,8 @@ class AuthServiceTest {
     private JwtService jwtService;
     @Mock
     private RefreshTokenService refreshTokenService;
+    @Mock
+    private LoginAttemptService loginAttemptService;
 
     @InjectMocks
     private AuthService authService;
@@ -150,12 +153,40 @@ class AuthServiceTest {
         request.setPassword("Password123!");
         when(userRepository.findByEmail("sam@campus.edu")).thenReturn(Optional.of(user));
 
-        AuthResponse response = authService.login(request);
+        AuthResponse response = authService.login(request, "10.0.0.1");
 
         assertThat(response.getEmail()).isEqualTo("sam@campus.edu");
         assertThat(response.getToken()).isEqualTo("fake-jwt-token");
         assertThat(response.getRefreshToken()).isEqualTo("fake-refresh-token");
         verify(authenticationManager).authenticate(any());
+        verify(loginAttemptService).recordSuccess("sam@campus.edu", "10.0.0.1");
+    }
+
+    @Test
+    void login_recordsFailureAndRethrowsOnBadCredentials() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("sam@campus.edu");
+        request.setPassword("wrong");
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new org.springframework.security.authentication.BadCredentialsException("bad"));
+
+        assertThrows(org.springframework.security.authentication.BadCredentialsException.class,
+                () -> authService.login(request, "10.0.0.1"));
+        verify(loginAttemptService).recordFailure("sam@campus.edu", "10.0.0.1");
+        verify(loginAttemptService, never()).recordSuccess(any(), any());
+    }
+
+    @Test
+    void login_doesNotCheckPasswordWhenThrottled() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("sam@campus.edu");
+        request.setPassword("Password123!");
+        doThrow(new com.campusconnect.exception.TooManyRequestsException("slow down", 60))
+                .when(loginAttemptService).checkNotBlocked("sam@campus.edu", "10.0.0.1");
+
+        assertThrows(com.campusconnect.exception.TooManyRequestsException.class,
+                () -> authService.login(request, "10.0.0.1"));
+        verifyNoInteractions(authenticationManager);
     }
 
     // --- refresh ---

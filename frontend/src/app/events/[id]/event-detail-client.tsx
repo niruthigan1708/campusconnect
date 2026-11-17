@@ -26,7 +26,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { ApiError, eventsApi, toAssetUrl } from "@/lib/api";
 import { EventResponse } from "@/lib/types";
-import { formatDate, formatTime, humanize } from "@/lib/format";
+import { formatDate, formatTime, hasEventStarted, humanize } from "@/lib/format";
 import { generateGoogleCalendarUrl, downloadIcsFile } from "@/lib/calendar";
 import { toast } from "sonner";
 import {
@@ -129,6 +129,13 @@ export function EventDetailClient({ id }: { id: string }) {
 
   const isOrganizerOwner = user && event && user.role === "ORGANIZER" && event.organizerId === user.id;
   const isAdmin = user && user.role === "ADMIN";
+  const hasStarted = event ? hasEventStarted(event.eventDate, event.startTime) : false;
+  const closedLabel =
+    event?.status === "COMPLETED"
+      ? "This event has ended"
+      : event?.status === "CANCELLED"
+        ? "This event was cancelled"
+        : "Event not open for registration";
 
   // Admins/organizers arrive here from within their own dashboard (e.g. the
   // admin events table, or an organizer's "My Events" list) - keep them inside
@@ -353,7 +360,15 @@ export function EventDetailClient({ id }: { id: string }) {
                 {/* RSVP / Registration Status Button */}
                 {event.status !== "APPROVED" ? (
                   <Badge variant="secondary" className="px-3 py-1.5 text-xs">
-                    Event not open for registration
+                    {event.isRegistered ? `You're registered · ${closedLabel}` : closedLabel}
+                  </Badge>
+                ) : hasStarted ? (
+                  // The API rejects registering/cancelling once an event has started;
+                  // the completion job only flips it to COMPLETED every few minutes.
+                  <Badge variant="secondary" className="px-3 py-1.5 text-xs">
+                    {event.isRegistered
+                      ? "You're registered · Event has started"
+                      : "Registration closed · Event has started"}
                   </Badge>
                 ) : !user ? (
                   <Button asChild className="shadow-md glow-primary font-semibold">

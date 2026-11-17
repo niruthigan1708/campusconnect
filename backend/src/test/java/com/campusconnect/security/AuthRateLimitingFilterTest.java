@@ -12,12 +12,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class AuthRateLimitingFilterTest {
 
+    private static final int LIMIT = 10;
     private final AtomicLong now = new AtomicLong(1_000_000);
     private AuthRateLimitingFilter filter;
 
     @BeforeEach
     void setUp() {
-        filter = new AuthRateLimitingFilter(now::get);
+        filter = new AuthRateLimitingFilter(now::get, LIMIT);
     }
 
     private MockHttpServletResponse send(String ip, String path) throws Exception {
@@ -30,7 +31,7 @@ class AuthRateLimitingFilterTest {
 
     @Test
     void blocksRequestsOverTheLimitWithRetryAfter() throws Exception {
-        for (int i = 0; i < AuthRateLimitingFilter.MAX_REQUESTS_PER_WINDOW; i++) {
+        for (int i = 0; i < LIMIT; i++) {
             assertThat(send("1.1.1.1", "/api/auth/login").getStatus()).isEqualTo(200);
         }
 
@@ -42,7 +43,7 @@ class AuthRateLimitingFilterTest {
 
     @Test
     void limitsAreTrackedPerClientIp() throws Exception {
-        for (int i = 0; i <= AuthRateLimitingFilter.MAX_REQUESTS_PER_WINDOW; i++) {
+        for (int i = 0; i <= LIMIT; i++) {
             send("1.1.1.1", "/api/auth/login");
         }
 
@@ -51,7 +52,7 @@ class AuthRateLimitingFilterTest {
 
     @Test
     void allowsRequestsAgainOnceTheWindowHasPassed() throws Exception {
-        for (int i = 0; i <= AuthRateLimitingFilter.MAX_REQUESTS_PER_WINDOW; i++) {
+        for (int i = 0; i <= LIMIT; i++) {
             send("1.1.1.1", "/api/auth/login");
         }
         now.addAndGet(AuthRateLimitingFilter.WINDOW_MILLIS);

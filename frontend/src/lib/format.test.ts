@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatTime, humanize } from "./format";
+import { formatDate, formatTime, hasEventStarted, humanize } from "./format";
 
 describe("formatDate", () => {
   it("formats an ISO date as a short US-style date", () => {
@@ -34,5 +34,25 @@ describe("humanize", () => {
 
   it("handles already-lowercase single words", () => {
     expect(humanize("student")).toBe("Student");
+  });
+});
+
+describe("hasEventStarted", () => {
+  const now = new Date(2026, 10, 17, 10, 0); // 17 Nov 2026, 10:00 local
+
+  it("is false for an event later today", () => {
+    expect(hasEventStarted("2026-11-17", "10:30:00", now)).toBe(false);
+  });
+
+  it("is true once the start time is reached", () => {
+    expect(hasEventStarted("2026-11-17", "10:00:00", now)).toBe(true);
+  });
+
+  it("is true for an event on a previous day", () => {
+    expect(hasEventStarted("2026-11-16", "23:00:00", now)).toBe(true);
+  });
+
+  it("is false for a future date", () => {
+    expect(hasEventStarted("2026-11-18", "08:00:00", now)).toBe(false);
   });
 });

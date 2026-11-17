@@ -12,12 +12,14 @@ import com.campusconnect.exception.DuplicateResourceException;
 import com.campusconnect.repository.ClubRepository;
 import com.campusconnect.repository.UserRepository;
 import com.campusconnect.security.JwtService;
+import com.campusconnect.security.LoginAttemptService;
 import com.campusconnect.security.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final LoginAttemptService loginAttemptService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -69,10 +72,17 @@ public class AuthService {
         return toAuthResponse(user);
     }
 
-    public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+    public AuthResponse login(LoginRequest request, String clientIp) {
+        loginAttemptService.checkNotBlocked(request.getEmail(), clientIp);
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+        } catch (AuthenticationException e) {
+            loginAttemptService.recordFailure(request.getEmail(), clientIp);
+            throw e;
+        }
+        loginAttemptService.recordSuccess(request.getEmail(), clientIp);
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
