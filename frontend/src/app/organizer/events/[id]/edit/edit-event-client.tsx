@@ -37,8 +37,10 @@ export function EditEventClient({ id }: { id: string }) {
 
   async function handleSubmit(values: EventFormValues) {
     try {
-      await eventsApi.update(id, { ...values, category: values.category as EventCategory });
-      toast.success("Event updated and sent back for approval.");
+      const updated = await eventsApi.update(id, { ...values, category: values.category as EventCategory });
+      toast.success(
+        updated.status === "PENDING" ? "Event updated and sent for approval." : "Event updated.",
+      );
       router.push("/organizer/events");
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : "Couldn't update this event.");
@@ -60,7 +62,9 @@ export function EditEventClient({ id }: { id: string }) {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Edit Event</h1>
         <p className="text-muted-foreground">
-          Saving changes sends this event back to pending for re-approval.
+          {event.status === "APPROVED"
+            ? "Changing the title, description, or category sends this event back for re-approval. Date, time, location, and capacity changes take effect immediately."
+            : "Saving changes submits this event for admin approval."}
         </p>
       </div>
       <div>

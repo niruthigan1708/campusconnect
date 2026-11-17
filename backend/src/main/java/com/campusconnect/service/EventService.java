@@ -133,6 +133,13 @@ public class EventService {
                     "Capacity cannot be lower than the " + registeredCount + " students already registered");
         }
 
+        // Admins moderate what an event *is* (title, description, category), not its
+        // logistics. Re-approving an approved event for a room change would block new
+        // sign-ups while it waits in the queue, so only content edits require it.
+        boolean contentChanged = !request.getTitle().equals(event.getTitle())
+                || !request.getDescription().equals(event.getDescription())
+                || request.getCategory() != event.getCategory();
+
         event.setTitle(request.getTitle());
         event.setDescription(request.getDescription());
         event.setEventDate(request.getEventDate());
@@ -142,9 +149,12 @@ public class EventService {
         event.setCapacity(request.getCapacity());
         event.setCategory(request.getCategory());
 
-        // Any edit sends the event back through admin approval.
-        event.setStatus(EventStatus.PENDING);
-        event.setRejectionReason(null);
+        // Pending and rejected events always (re)enter the queue: editing a rejected
+        // event is how an organizer resubmits it.
+        if (event.getStatus() != EventStatus.APPROVED || contentChanged) {
+            event.setStatus(EventStatus.PENDING);
+            event.setRejectionReason(null);
+        }
 
         return eventMapper.toResponse(event);
     }
@@ -231,7 +241,11 @@ public class EventService {
         }
         boolean isOwner = principal != null && principal.getId().equals(event.getOrganizer().getId());
         boolean isAdmin = principal != null && principal.getRole() == Role.ADMIN;
-        if (!isOwner && !isAdmin) {
+        // A student who signed up keeps access while the event is back in review or
+        // has been cancelled, instead of their "My Events" link turning into a 404.
+        boolean isRegisteredStudent = principal != null && principal.getRole() == Role.STUDENT
+                && registrationRepository.existsByStudentIdAndEventId(principal.getId(), event.getId());
+        if (!isOwner && !isAdmin && !isRegisteredStudent) {
             // Hide existence of non-approved events from everyone else.
             throw new ResourceNotFoundException("Event not found: " + event.getId());
         }

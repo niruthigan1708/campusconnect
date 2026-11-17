@@ -423,4 +423,80 @@ class EventServiceTest {
 
         verify(eventMapper).toResponse(approvedEvent, null);
     }
+
+    // --- re-approval rules and registered-student visibility ---
+
+    private EventRequest requestMatching(Event event) {
+        EventRequest request = new EventRequest();
+        request.setTitle(event.getTitle());
+        request.setDescription(event.getDescription());
+        request.setEventDate(event.getEventDate());
+        request.setStartTime(event.getStartTime());
+        request.setEndTime(event.getEndTime());
+        request.setLocation(event.getLocation());
+        request.setCapacity(event.getCapacity());
+        request.setCategory(event.getCategory());
+        return request;
+    }
+
+    @Test
+    void updateEvent_logisticsOnlyEditKeepsApprovedEventApproved() {
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
+        EventRequest request = requestMatching(approvedEvent);
+        request.setLocation("Hall C");
+        request.setEventDate(approvedEvent.getEventDate().plusDays(1));
+        request.setCapacity(80);
+
+        eventService.updateEvent(100L, 1L, request);
+
+        assertThat(approvedEvent.getStatus()).isEqualTo(EventStatus.APPROVED);
+        assertThat(approvedEvent.getLocation()).isEqualTo("Hall C");
+        assertThat(approvedEvent.getCapacity()).isEqualTo(80);
+    }
+
+    @Test
+    void updateEvent_categoryChangeSendsApprovedEventBackToPending() {
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
+        EventRequest request = requestMatching(approvedEvent);
+        request.setCategory(EventCategory.SOCIAL);
+
+        eventService.updateEvent(100L, 1L, request);
+
+        assertThat(approvedEvent.getStatus()).isEqualTo(EventStatus.PENDING);
+    }
+
+    @Test
+    void updateEvent_anyEditResubmitsRejectedEvent() {
+        approvedEvent.setStatus(EventStatus.REJECTED);
+        approvedEvent.setRejectionReason("Too vague");
+        when(eventRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(approvedEvent));
+        EventRequest request = requestMatching(approvedEvent);
+        request.setLocation("Hall C");
+
+        eventService.updateEvent(100L, 1L, request);
+
+        assertThat(approvedEvent.getStatus()).isEqualTo(EventStatus.PENDING);
+        assertThat(approvedEvent.getRejectionReason()).isNull();
+    }
+
+    @Test
+    void getEvent_registeredStudentCanStillViewEventBackInReview() {
+        User student = User.builder().id(5L).name("Sam Student").email("sam@campus.edu").role(Role.STUDENT).build();
+        when(eventRepository.findById(101L)).thenReturn(Optional.of(pendingEvent));
+        when(registrationRepository.existsByStudentIdAndEventId(5L, 101L)).thenReturn(true);
+
+        eventService.getEvent(101L, new CustomUserDetails(student));
+
+        verify(eventMapper).toResponse(pendingEvent, true);
+    }
+
+    @Test
+    void getEvent_unregisteredStudentCannotViewPendingEvent() {
+        User student = User.builder().id(6L).name("Other Student").email("o@campus.edu").role(Role.STUDENT).build();
+        when(eventRepository.findById(101L)).thenReturn(Optional.of(pendingEvent));
+        when(registrationRepository.existsByStudentIdAndEventId(6L, 101L)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> eventService.getEvent(101L, new CustomUserDetails(student)));
+    }
 }

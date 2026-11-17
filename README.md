@@ -150,8 +150,11 @@ you can exercise every status without manually creating them.
 3. `/organizer/events/new` - create an event. It starts in `PENDING` and is
    invisible to students until an admin approves it.
 4. `/organizer/events` - see all your events and their status; edit a
-   `PENDING`/`APPROVED` event (editing resets it to `PENDING` for
-   re-approval); cancel or delete.
+   `PENDING`/`APPROVED`/`REJECTED` event; cancel or delete. Editing a pending
+   or rejected event (re)submits it for approval. On an approved event, only
+   title/description/category changes send it back to `PENDING`;
+   date/time/location/capacity changes apply immediately. Students already
+   registered can still open the event while it's back in review.
 5. `/organizer/events/[id]/registrations` - see who's registered for one of
    your events.
 
