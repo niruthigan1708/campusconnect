@@ -127,11 +127,14 @@ export default function ManageEventsPage() {
                             <Users className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button asChild variant="ghost" size="icon" title="Edit event">
-                          <Link href={`/organizer/events/${event.id}/edit`}>
-                            <Pencil className="h-4 w-4" />
-                          </Link>
-                        </Button>
+                        {/* The API rejects edits to cancelled/completed events. */}
+                        {event.status !== "CANCELLED" && event.status !== "COMPLETED" && (
+                          <Button asChild variant="ghost" size="icon" title="Edit event">
+                            <Link href={`/organizer/events/${event.id}/edit`}>
+                              <Pencil className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
