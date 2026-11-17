@@ -205,11 +205,14 @@ cd frontend && npm test        # Vitest unit tests
   only appear in the server log, not in a real inbox.
 - Rate limiting on `/api/auth/login`, `/api/auth/register`,
   `/api/auth/forgot-password`, and `/api/auth/reset-password` is in-memory
-  per-instance (10 requests/min per IP+path, `429` with `Retry-After`) - fine
-  for a single backend instance, but a multi-instance deployment behind a load
-  balancer would need a shared store (e.g. Redis) instead. Behind a reverse
-  proxy the client IP is taken from `X-Forwarded-For`
-  (`FORWARD_HEADERS_STRATEGY`, default `native`). Note that users behind one
-  shared NAT IP (e.g. a campus network) share this limit.
+  per-instance: 30 requests/min per IP+path (`AUTH_RATE_LIMIT_PER_MINUTE`),
+  kept loose because a whole campus may share one NAT IP. Password guessing is
+  throttled per account instead: 5 failed logins for the same email from the
+  same IP lock that combination for 15 minutes, without affecting other
+  students on the network. Both answer `429` with `Retry-After`. Fine for a
+  single backend instance; a multi-instance deployment behind a load balancer
+  would need a shared store (e.g. Redis). Behind a reverse proxy the client IP
+  is taken from `X-Forwarded-For` (`FORWARD_HEADERS_STRATEGY`, default
+  `native`).
 - Single-server file storage for uploads (no CDN/object storage) - fine for a
   small deployment, not for scaling out to multiple backend instances.

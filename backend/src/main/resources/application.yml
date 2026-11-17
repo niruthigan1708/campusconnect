@@ -79,6 +79,11 @@ app:
   # When true, seeds a full set of demo clubs/events/registrations on startup if
   # the database is empty. See DemoDataSeeder.
   seed-demo-data: ${SEED_DEMO_DATA:false}
+  rate-limit:
+    # Per-IP cap on login/register/forgot-password/reset-password. Kept loose
+    # because many students can share one campus NAT IP; repeated failed logins
+    # per account are throttled separately (LoginAttemptService: 5 per 15 min).
+    auth-requests-per-minute: ${AUTH_RATE_LIMIT_PER_MINUTE:30}
   events:
     # How often approved events whose end time has passed are marked COMPLETED.
     completion-check-interval-ms: ${EVENT_COMPLETION_CHECK_INTERVAL_MS:300000}

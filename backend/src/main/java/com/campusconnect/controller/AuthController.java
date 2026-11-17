@@ -8,6 +8,7 @@ import com.campusconnect.dto.auth.RegisterRequest;
 import com.campusconnect.dto.auth.ResetPasswordRequest;
 import com.campusconnect.service.AuthService;
 import com.campusconnect.service.PasswordResetService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,8 +33,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.login(request);
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+        // getRemoteAddr() is the real client IP behind a trusted proxy thanks to
+        // server.forward-headers-strategy (see application.yml).
+        AuthResponse response = authService.login(request, httpRequest.getRemoteAddr());
         return ResponseEntity.ok(response);
     }
 

@@ -5,6 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -35,11 +37,11 @@ public class AuthRateLimitingFilter extends OncePerRequestFilter {
     private static final Set<String> LIMITED_PATHS = Set.of(
             "/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password"
     );
-    static final int MAX_REQUESTS_PER_WINDOW = 10;
     static final long WINDOW_MILLIS = 60_000;
 
     private final Map<String, Window> buckets = new ConcurrentHashMap<>();
     private final LongSupplier clock;
+    private final int maxRequestsPerWindow;
 
     private static final class Window {
         final long startedAt;
@@ -51,12 +53,19 @@ public class AuthRateLimitingFilter extends OncePerRequestFilter {
         }
     }
 
-    public AuthRateLimitingFilter() {
-        this(System::currentTimeMillis);
+    /**
+     * The per-IP cap is deliberately loose (default 30/min): on a campus many
+     * students share one NAT address. Per-account brute forcing is handled
+     * separately and more tightly by {@link LoginAttemptService}.
+     */
+    @Autowired
+    public AuthRateLimitingFilter(@Value("${app.rate-limit.auth-requests-per-minute:30}") int maxRequestsPerWindow) {
+        this(System::currentTimeMillis, maxRequestsPerWindow);
     }
 
-    AuthRateLimitingFilter(LongSupplier clock) {
+    AuthRateLimitingFilter(LongSupplier clock, int maxRequestsPerWindow) {
         this.clock = clock;
+        this.maxRequestsPerWindow = maxRequestsPerWindow;
     }
 
     @Override
@@ -78,7 +87,7 @@ public class AuthRateLimitingFilter extends OncePerRequestFilter {
                 (existing == null || isExpired(existing, now)) ? new Window(now) : existing);
         int requestsSoFar = window.count.incrementAndGet();
 
-        if (requestsSoFar > MAX_REQUESTS_PER_WINDOW) {
+        if (requestsSoFar > maxRequestsPerWindow) {
             long retryAfterSeconds = Math.max(1, (window.startedAt + WINDOW_MILLIS - now + 999) / 1000);
             response.setStatus(429);
             response.setHeader("Retry-After", String.valueOf(retryAfterSeconds));
