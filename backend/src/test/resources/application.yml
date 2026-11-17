@@ -1,15 +1,16 @@
+# Shadows src/main/resources/application.yml for tests. The DataSource comes
+# from the Testcontainers PostgreSQL (see TestcontainersConfiguration), so the
+# schema is built by the real Flyway migrations and checked by Hibernate
+# exactly as in production - previously tests used H2 with Flyway disabled,
+# so migrations were never exercised.
 spring:
   flyway:
-    enabled: false
-  datasource:
-    url: jdbc:h2:mem:campusconnect_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 
+    enabled: true
+    locations: classpath:db/migration
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
+    open-in-view: false
     show-sql: false
   mail:
     # Must be present (even empty) for MailSenderAutoConfiguration to create a
