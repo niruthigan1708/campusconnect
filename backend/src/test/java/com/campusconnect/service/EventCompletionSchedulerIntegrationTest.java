@@ -6,7 +6,7 @@ import com.campusconnect.repository.EventRepository;
 import com.campusconnect.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import com.campusconnect.IntegrationTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * unit test couldn't validate (query syntax, date/time comparison, enum
  * literals).
  */
-@SpringBootTest
+@IntegrationTest
 @Transactional
 class EventCompletionSchedulerIntegrationTest {
 
