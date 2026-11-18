@@ -9,12 +9,14 @@ import com.campusconnect.exception.BadRequestException;
 import com.campusconnect.exception.ResourceNotFoundException;
 import com.campusconnect.repository.ClubRepository;
 import com.campusconnect.repository.EventRepository;
+import com.campusconnect.repository.IdCount;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -27,8 +29,16 @@ public class ClubService {
     private final FileStorageService fileStorageService;
 
     public List<ClubResponse> listAllClubs() {
-        return clubRepository.findAll().stream()
-                .map(this::toClubResponse)
+        // Clubs come with their organizer (see ClubRepository.findAll); event counts
+        // for every club arrive in one grouped query instead of one per club.
+        List<Club> clubs = clubRepository.findAll();
+        if (clubs.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, Long> activeCounts = IdCount.toMap(eventRepository.countByStatusGroupedByClub(
+                EventStatus.APPROVED, clubs.stream().map(Club::getId).toList()));
+        return clubs.stream()
+                .map(club -> toClubResponse(club, activeCounts.getOrDefault(club.getId(), 0L)))
                 .toList();
     }
 
@@ -48,10 +58,7 @@ public class ClubService {
         if (!clubRepository.existsById(clubId)) {
             throw new ResourceNotFoundException("Club not found: " + clubId);
         }
-        return eventRepository.findByClubIdAndStatus(clubId, EventStatus.APPROVED)
-                .stream()
-                .map(eventMapper::toResponse)
-                .toList();
+        return eventMapper.toResponses(eventRepository.findByClubIdAndStatus(clubId, EventStatus.APPROVED));
     }
 
     @Transactional
@@ -76,7 +83,10 @@ public class ClubService {
     }
 
     private ClubResponse toClubResponse(Club club) {
-        long activeCount = eventRepository.countByClubIdAndStatus(club.getId(), EventStatus.APPROVED);
+        return toClubResponse(club, eventRepository.countByClubIdAndStatus(club.getId(), EventStatus.APPROVED));
+    }
+
+    private ClubResponse toClubResponse(Club club, long activeCount) {
         return ClubResponse.builder()
                 .id(club.getId())
                 .name(club.getName())
