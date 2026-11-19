@@ -1,0 +1,38 @@
+# Dependabot opens PRs against the default branch (Initial) when a dependency
+# has a newer version or a known vulnerability. CI runs on each PR, so an
+# update is only merged once the full test suite passes with it.
+#
+# Minor and patch updates are grouped into one weekly PR per ecosystem to keep
+# the noise down; major versions still get their own PR because they are more
+# likely to need code changes. Security updates are always raised separately
+# and immediately (enable "Dependabot security updates" in the repo settings).
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      backend-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      frontend-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci(deps)"
