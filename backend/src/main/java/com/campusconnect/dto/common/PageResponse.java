@@ -17,8 +17,13 @@ public class PageResponse<T> {
     private int totalPages;
 
     public static <S, T> PageResponse<T> from(Page<S> page, Function<S, T> mapper) {
+        return from(page, page.getContent().stream().map(mapper).toList());
+    }
+
+    /** For content mapped as a batch (e.g. to fetch related counts in one query). */
+    public static <S, T> PageResponse<T> from(Page<S> page, List<T> content) {
         return PageResponse.<T>builder()
-                .content(page.getContent().stream().map(mapper).toList())
+                .content(content)
                 .page(page.getNumber())
                 .size(page.getSize())
                 .totalElements(page.getTotalElements())

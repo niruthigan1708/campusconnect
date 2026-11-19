@@ -51,22 +51,22 @@ public class EventService {
         Pageable sortedPageable = org.springframework.data.domain.PageRequest.of(
                 pageable.getPageNumber(), pageable.getPageSize(), sort);
         Page<Event> events = eventRepository.findAll(spec, sortedPageable);
-        return PageResponse.from(events, eventMapper::toResponse);
+        return PageResponse.from(events, eventMapper.toResponses(events.getContent()));
     }
 
     public List<EventResponse> listMyEvents(Long organizerId) {
-        return eventRepository.findByOrganizerId(organizerId).stream().map(eventMapper::toResponse).toList();
+        return eventMapper.toResponses(eventRepository.findByOrganizerId(organizerId));
     }
 
     public List<EventResponse> listPendingEvents() {
-        return eventRepository.findByStatus(EventStatus.PENDING).stream().map(eventMapper::toResponse).toList();
+        return eventMapper.toResponses(eventRepository.findByStatus(EventStatus.PENDING));
     }
 
     public PageResponse<EventResponse> listAllEvents(EventStatus status, Pageable pageable) {
         Page<Event> events = status != null
                 ? eventRepository.findByStatus(status, pageable)
                 : eventRepository.findAll(pageable);
-        return PageResponse.from(events, eventMapper::toResponse);
+        return PageResponse.from(events, eventMapper.toResponses(events.getContent()));
     }
 
     public EventResponse getEvent(Long eventId, CustomUserDetails principal) {

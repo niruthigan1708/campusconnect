@@ -78,10 +78,10 @@ public class RegistrationService {
     }
 
     public List<EventResponse> getMyRegisteredEvents(Long studentId) {
-        return registrationRepository.findByStudentId(studentId).stream()
+        List<Event> events = registrationRepository.findByStudentId(studentId).stream()
                 .map(Registration::getEvent)
-                .map(event -> eventMapper.toResponse(event, true))
                 .toList();
+        return eventMapper.toResponses(events, true);
     }
 
     public List<RegistrationResponse> getEventRegistrations(Long eventId, Long requesterId, boolean isAdmin) {
