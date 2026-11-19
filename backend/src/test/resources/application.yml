@@ -17,6 +17,14 @@ spring:
     # JavaMailSender bean - MailService needs one to be injectable in tests.
     host: ""
 
+# Mirrors the production default in src/main/resources/application.yml (this
+# file shadows it), so ApiSecurityIntegrationTest checks the docs stay hidden.
+springdoc:
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:false}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:false}
+
 app:
   jwt:
     secret: test-secret-key-that-is-at-least-256-bits-long-for-testing-purpose-only

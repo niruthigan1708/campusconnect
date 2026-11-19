@@ -66,6 +66,16 @@ class ApiSecurityIntegrationTest {
         pendingEvent = event(club, EventStatus.PENDING);
     }
 
+    // --- API docs ---
+
+    @Test
+    void apiDocsAreNotExposedByDefault() throws Exception {
+        mockMvc.perform(get("/v3/api-docs")).andExpect(status().isNotFound());
+        mockMvc.perform(get("/swagger-ui/index.html")).andExpect(status().isNotFound());
+        // Not even to an admin: the switch is per environment, not per role.
+        mockMvc.perform(as(admin, get("/v3/api-docs"))).andExpect(status().isNotFound());
+    }
+
     // --- public vs authenticated ---
 
     @Test
