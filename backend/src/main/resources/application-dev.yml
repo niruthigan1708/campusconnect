@@ -19,6 +19,12 @@ spring:
       hibernate:
         format_sql: true
 
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
 app:
   admin:
     name: Platform Admin

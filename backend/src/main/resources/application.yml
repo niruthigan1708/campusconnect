@@ -46,6 +46,15 @@ spring:
           starttls:
             enable: true
 
+springdoc:
+  # Off unless explicitly enabled: the OpenAPI spec maps every endpoint and
+  # parameter, which is useful during development but needless reconnaissance
+  # for an attacker in production. The dev profile turns it on.
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:false}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:false}
+
 server:
   port: ${SERVER_PORT:8080}
   # Behind a reverse proxy (Nginx/Caddy), use the real client IP from

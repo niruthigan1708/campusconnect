@@ -91,7 +91,9 @@ npm install
 npm run dev
 ```
 
-Backend: http://localhost:8080 (API docs at `/swagger-ui.html`)
+Backend: http://localhost:8080 (API docs at `/swagger-ui.html` when
+`API_DOCS_ENABLED=true` or the `dev` profile is active; off by default so
+production doesn't publish a map of the API)
 Frontend: http://localhost:3000
 
 On startup, the backend automatically:
@@ -212,6 +214,15 @@ runs everything on every push/PR via GitHub Actions.
   `V{next}__description.sql` file; never edit an already-applied one.
 - **File uploads** (club logos, event banners) are stored under
   `backend/uploads/` and served at `/uploads/**`.
+- **Security headers:** every frontend page is served with a Content Security
+  Policy and related headers (`frontend/src/lib/security-headers.ts`).
+  Scripts load only from the app itself, and network requests and images only
+  from the app and `NEXT_PUBLIC_API_URL`. If you add a third-party script,
+  font or API, add its origin there or the browser will block it. Why tokens
+  still live in `localStorage`, and the plan to change that, is in
+  [docs/adr/0001](docs/adr/0001-token-storage-in-the-browser.md).
+- **Dependency updates:** Dependabot (`.github/dependabot.yml`) opens weekly
+  PRs for Maven and npm and monthly PRs for GitHub Actions. Merge them only once CI is green.
 - **`docker-compose.yml`** at the repo root is an *optional* alternative to a
   native Postgres install - it's not required and isn't wired to anything
   else automatically; see the comments in that file if you want to use it.
